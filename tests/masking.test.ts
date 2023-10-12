@@ -1,0 +1,142 @@
+import { maskArguments, maskSensitiveData, maskString } from '../src/';
+
+describe('Test all possible masking', () => {
+    it('should mask credit card data', () => {
+        expect(
+            maskString('another line with just a credit card: 1234 5678 9101 1121 and some arbitrary text behind it')
+        ).toBe('another line with just a credit card: 12***************21 and some arbitrary text behind it');
+    });
+
+    it('should mask credit card data with dashes', () => {
+        expect(
+            maskString('another line with just a credit card: 1234-5678-9101-1121 and some arbitrary text behind it')
+        ).toBe('another line with just a credit card: 12***************21 and some arbitrary text behind it');
+    });
+
+    it('should mask email data', () => {
+        expect(maskString('another line with just an email: joe.doe@acme.com and some arbitrary text behind it')).toBe(
+            'another line with just an email: jo************om and some arbitrary text behind it'
+        );
+    });
+
+    it('should mask a password in an arbitrary text', () => {
+        expect(
+            maskString(
+                'a dude once exposed his super secret A1vbcvc.De#3435?r password to the world but luckily we could help'
+            )
+        ).toBe(
+            'a dude once exposed his super secret A1***********35?r password to the world but luckily we could help'
+        );
+    });
+
+    it('should mask an IP address', () => {
+        expect(maskString('my designated IP adr. is 192.168.2.104 and you will never find out')).toBe(
+            'my designated IP adr. is 19*********04 and you will never find out'
+        );
+    });
+
+    it('should mask an url', () => {
+        expect(maskString('my designated url is https://www.acme.com and you will never find out')).toBe(
+            'my designated url is ht****************om and you will never find out'
+        );
+    });
+
+    it('should mask a social security number', () => {
+        expect(maskString('my social security number is 123-45-6789 and you will never find out')).toBe(
+            'my social security number is 12*******89 and you will never find out'
+        );
+    });
+
+    it('should mask passwords, credit cards and social security numbers but nothing else', () => {
+        const fullText = `I once entered my credit card number 1234-5678-9101-1121 and my password A1vbcvc.De#3435?r
+        , my email john.doe@acme.com and my ssn 123-45-6789 on the website, a friend recommended ... it can be found under https://www.acme.com/scam`;
+        const result = maskString(fullText, ['password', 'creditCard', 'ssn']);
+        expect(result).toBe(
+            `I once entered my credit card number 12***************21 and my password A1***********35?r
+        , my email john.doe@acme.com and my ssn 12*******89 on the website, a friend recommended ... it can be found under https://www.acme.com/scam`
+        );
+    });
+
+    it('should mask anything, it finds', () => {
+        const fullText = `I once entered my credit card number 1234-5678-9101-1121 and my password A1vbcvc.De#3435?r
+        and my email john.doe@acme.com on the website, a friend recommended ... it can be found under https://www.acme.com/scam?user=john.doe&password=A1vbcvc.De#3435?r`;
+        const result = maskString(fullText);
+        expect(result).toBe(
+            `I once entered my credit card number 12***************21 and my password A1***********35?r
+        and my email jo*************om on the website, a friend recommended ... it can be found under ht**************************************************************?r`
+        );
+    });
+
+    it('should mask a password and email', () => {
+        expect(
+            maskString(
+                'my login data is username: john.doe@acme.com and pass: A1vbcvc.De#3435?r ... that is risky to share'
+            )
+        ).toBe('my login data is username: jo*************om and pass: A1***********35?r ... that is risky to share');
+    });
+
+    it('should mask a password but not the email', () => {
+        expect(
+            maskString(
+                'my login data is username: john.doe@acme.com and pass: A1vbcvc.De#3435?r ... that is risky to share',
+                ['password']
+            )
+        ).toBe('my login data is username: john.doe@acme.com and pass: A1***********35?r ... that is risky to share');
+    });
+
+    it('should mask a password and the Credit Card but not the email', () => {
+        expect(
+            maskString(
+                'for my purchase I used 9876-5432-1098-7654 and my login data is username: john.doe@acme.com and pass: A1vbcvc.De#3435?r ... that is risky to share',
+                ['password', 'creditCard']
+            )
+        ).toBe(
+            'for my purchase I used 98***************54 and my login data is username: john.doe@acme.com and pass: A1***********35?r ... that is risky to share'
+        );
+    });
+
+    it('should mask custom tags in an object', () => {
+        const data = {
+            arbitraryKeyToMask: "OhMyGosh! It's masked",
+            anotherSensitiveKey: 'No way, this is masked, too!',
+            safeString: 'Hello, World!'
+        };
+        const customKeyCheck = (key: string) => ['arbitraryKeyToMask', 'anotherSensitiveKey'].includes(key);
+        const maskedDataWithCustomCheck = maskSensitiveData(data, customKeyCheck);
+        expect(maskedDataWithCustomCheck).toEqual({
+            arbitraryKeyToMask: 'Oh*****************ed',
+            anotherSensitiveKey: 'No************************o!',
+            safeString: 'Hello, World!'
+        });
+    });
+
+    it('should mask an array of strings', () => {
+        const input = ['array', 'with', 'strings', { passwordField: 'HideMe' }];
+        expect(maskArguments(input)).toEqual(['array', 'with', 'strings', { passwordField: 'Hi**Me' }]);
+    });
+
+    it('should mask an arbitrary object', () => {
+        const obj = {
+            password: 'SuperSecret',
+            nested: {
+                cc: '9876-5432-1098-7654',
+                safeString: 'Hello, World!',
+                recruiter_email: 'gustav.gans@entenhausen.de',
+                deeper: {
+                    password: 'Yf3Ujxxxy12oAY0l'
+                }
+            }
+        };
+        expect(maskSensitiveData(obj)).toEqual({
+            password: 'Su*******et',
+            nested: {
+                cc: '98***************54',
+                deeper: {
+                    password: 'Yf************0l'
+                },
+                recruiter_email: 'gu**********************de',
+                safeString: 'Hello, World!'
+            }
+        });
+    });
+});
