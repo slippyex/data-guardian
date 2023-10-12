@@ -1,6 +1,15 @@
-import { maskArguments, maskSensitiveData, maskString } from '../src/';
+import { maskArguments, maskData, maskString } from '../src/';
 
 describe('Test all possible masking', () => {
+
+    it('should passthrough a boolean', () => {
+        expect(maskData(true)).toBe(true);
+    });
+
+    it('should not mask anything', () => {
+        expect(maskString('Hello, World!')).toBe('Hello, World!');
+    });
+
     it('should mask credit card data', () => {
         expect(
             maskString('another line with just a credit card: 1234 5678 9101 1121 and some arbitrary text behind it')
@@ -44,6 +53,12 @@ describe('Test all possible masking', () => {
     it('should mask a social security number', () => {
         expect(maskString('my social security number is 123-45-6789 and you will never find out')).toBe(
             'my social security number is 12*******89 and you will never find out'
+        );
+    });
+
+    it('should mask a UUID', () => {
+        expect(maskString('my super generic and random UUID 123e4567-e89b-12d3-a456-426614174000 is really something to be proud of')).toBe(
+            'my super generic and random UUID 12********************************00 is really something to be proud of'
         );
     });
 
@@ -102,7 +117,7 @@ describe('Test all possible masking', () => {
             safeString: 'Hello, World!'
         };
         const customKeyCheck = (key: string) => ['arbitraryKeyToMask', 'anotherSensitiveKey'].includes(key);
-        const maskedDataWithCustomCheck = maskSensitiveData(data, customKeyCheck);
+        const maskedDataWithCustomCheck = maskData(data, customKeyCheck);
         expect(maskedDataWithCustomCheck).toEqual({
             arbitraryKeyToMask: 'Oh*****************ed',
             anotherSensitiveKey: 'No************************o!',
@@ -125,9 +140,13 @@ describe('Test all possible masking', () => {
                 deeper: {
                     password: 'Yf3Ujxxxy12oAY0l'
                 }
-            }
+            },
+            wild: [
+                'This is not masked',
+                { passwordField: 'blerch'}
+            ]
         };
-        expect(maskSensitiveData(obj)).toEqual({
+        expect(maskData(obj)).toEqual({
             password: 'Su*******et',
             nested: {
                 cc: '98***************54',
@@ -136,7 +155,11 @@ describe('Test all possible masking', () => {
                 },
                 recruiter_email: 'gu**********************de',
                 safeString: 'Hello, World!'
-            }
+            },
+            wild: [
+                'This is not masked',
+                { passwordField: 'bl**ch'}
+            ]
         });
     });
 });

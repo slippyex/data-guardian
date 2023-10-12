@@ -1,1 +1,1 @@
-export * from './lib/maskSensitiveData';
+export * from './lib/dataGuard';

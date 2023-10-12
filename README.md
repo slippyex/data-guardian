@@ -1,6 +1,6 @@
-# DataGuardian-Masker
+# Data-Guardian-Masker
 
-`DataGuardian-Masker` is a robust JavaScript utility crafted to secure sensitive strings and objects by masking confidential data within them. This library is indispensable in contexts where data privacy is paramount, such as logging, debugging, or displaying data that contains sensitive information.
+`Data-Guardian-Masker` is a robust JavaScript utility crafted to secure sensitive strings and objects by masking confidential data within them. This library is indispensable in contexts where data privacy is paramount, such as logging, debugging, or displaying data that contains sensitive information.
 
 ## Key Features
 
@@ -34,7 +34,7 @@ console.log(maskedUrl); // The URL will be masked
 ### Masking Complex Data Structures
 
 ```javascript
-import { maskSensitiveData } from './DataGuardian-Masker';
+import { dataGuard } from './DataGuardian-Masker';
 
 const userObject = {
 username: 'realUser',
@@ -49,7 +49,7 @@ paymentMethods: [
 ]
 };
 
-const maskedUser = maskSensitiveData(userObject);
+const maskedUser = dataGuard(userObject);
 console.log(maskedUser); // All sensitive information will be masked
 ```
 
@@ -57,7 +57,7 @@ console.log(maskedUser); // All sensitive information will be masked
 
 ```javascript
 const customSensitivityCheck = (key) => ['customSensitive', 'privateKey'].includes(key);
-const customMaskedData = maskSensitiveData(userObject, customSensitivityCheck);
+const customMaskedData = maskData(userObject, customSensitivityCheck);
 console.log(customMaskedData); // Masking applied with custom sensitivity definitions
 ```
 
