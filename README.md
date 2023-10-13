@@ -1,4 +1,7 @@
 # data-guardian 🔒
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/slippyex/data-guardian/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/slippyex/data-guardian/tree/main)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/slippyex/data-guardian)
+![NPM](https://img.shields.io/npm/l/data-guardian)
 
 `data-guardian` is a nimble, zero-dependency and lightweight NPM package crafted for developers who prioritize data security and privacy. This handy utility enables you to mask sensitive strings and object properties, safeguarding critical data from prying eyes, especially in logs or UI displays. Notably, it maintains the immutability of your data by default, though this feature is optional and customizable based on your needs.
 
