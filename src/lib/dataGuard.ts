@@ -1,4 +1,4 @@
-import { deepClone, isObject, isString } from '../utils/helpers';
+import { deepClone, isNullish, isObject, isString } from '../utils/helpers';
 
 type SensitiveContentKey = keyof typeof sensitiveContentRegExp;
 
@@ -101,7 +101,14 @@ export function maskData(item: unknown, keyCheck?: (key: string) => boolean, imm
     return item;
 }
 
-export function maskArguments(args: unknown[]): unknown[] {
-    if (!args) return args;
-    return args.map(arg => maskData(arg));
+export function maskArguments(args: unknown[], keyCheck?: (key: string) => boolean, immutable = true): unknown[] {
+    if (isNullish(args)) return args;
+    if (!Array.isArray(args)) return args;
+    if (args.length === 0) return [];
+    return args.map(arg => {
+        if (typeof arg !== 'object' && typeof arg !== 'string') {
+            return arg;
+        }
+        return maskData(arg, keyCheck, immutable);
+    });
 }
