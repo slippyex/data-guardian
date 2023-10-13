@@ -1,7 +1,6 @@
 import { deepClone } from '../src/utils/helpers';
 
 describe('deepClone tests', () => {
-
     // Clones an object with nested properties
     it('should clone an object with nested properties', () => {
         const obj = {
@@ -73,7 +72,7 @@ describe('deepClone tests', () => {
     });
 
     it('should clone an object with non-enumerable properties', () => {
-        const obj: {name: string, age: number; address?: string} = {
+        const obj: { name: string; age: number; address?: string } = {
             name: 'John',
             age: 30
         };

@@ -56,5 +56,5 @@ export function isString(value: unknown): value is string {
 }
 
 export function isNullish(value: unknown) {
-    return value === undefined || value === null
+    return value === undefined || value === null;
 }
