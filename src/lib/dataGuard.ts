@@ -5,6 +5,7 @@ type SensitiveContentKey = keyof typeof sensitiveContentRegExp;
 interface IMaskDataOptions {
     keyCheck?: (key: string) => boolean;
     immutable?: boolean;
+    customPatterns?: Record<string, RegExp>;
 }
 
 const defaultSensitiveKeyFragments: Set<string> = new Set([
@@ -56,29 +57,77 @@ function shouldMaskKey(key: string): boolean {
     return false;
 }
 
-export function maskString(
-    value: string,
-    types: SensitiveContentKey[] = Object.keys(sensitiveContentRegExp) as SensitiveContentKey[]
+function maskSensitiveContent(
+    originalValue: string,
+    defaultPatterns: typeof sensitiveContentRegExp,
+    customPatterns?: Record<string, RegExp>
 ): string {
-    if (!value) return value;
-    let maskedValue = value;
-    types.forEach(type => {
-        const pattern = sensitiveContentRegExp[type];
-        maskedValue = maskedValue.replace(pattern, match => maskSensitiveValue(match) as string);
-        pattern.lastIndex = 0; // Reset regex state
-    });
-    return maskedValue;
+    const allPatterns = { ...defaultPatterns, ...customPatterns };
+
+    const applyPatternMasking = (currentValue: string, pattern: RegExp): string => {
+        if (pattern) {
+            currentValue = currentValue.replace(pattern, match => maskSensitiveValue(match) as string);
+            pattern.lastIndex = 0; // Reset regex state for global patterns
+        }
+        return currentValue;
+    };
+
+    return Object.values(allPatterns).reduce(
+        (maskedValue, pattern) => applyPatternMasking(maskedValue, pattern),
+        originalValue
+    );
 }
 
-export function maskData(item: unknown, options: IMaskDataOptions = {}): unknown {
+export function maskString(
+    value: string,
+    types: SensitiveContentKey[] = Object.keys(sensitiveContentRegExp) as SensitiveContentKey[],
+    customSensitiveContentRegExp?: Record<string, RegExp>
+): string {
+    if (!value || value.length === 0) return value;
+
+    const applicablePatterns = types.reduce((acc, type) => {
+        if (type in sensitiveContentRegExp) {
+            // check if 'type' is a valid key to satisfy TypeScript's safety checks
+            acc[type] = sensitiveContentRegExp[type]; // TypeScript now knows 'type' is a valid key
+        }
+        return acc;
+    }, {} as Record<SensitiveContentKey, RegExp>); // Also define the accumulator's type
+
+    return maskSensitiveContent(value, applicablePatterns, customSensitiveContentRegExp);
+}
+
+export function maskData<T>(item: T, options: IMaskDataOptions = {}): T {
     const { keyCheck = shouldMaskKey, immutable = true } = options;
 
     if (isString(item)) {
-        return maskString(item);
+        // Pass custom regex patterns to maskString
+        return maskString(item, undefined, options.customPatterns) as T;
     }
 
     options.keyCheck = keyCheck;
     options.immutable = immutable;
+
+    if (item instanceof Map) {
+        // Process Map items
+        const processedMap = options.immutable ? new Map<string, T>() : item;
+
+        item.forEach((value, key) => {
+            if (typeof key === 'string') {
+                const maskedValue = options.keyCheck(key)
+                    ? isString(value)
+                        ? maskSensitiveValue(value)
+                        : maskData(value, options)
+                    : maskData(value, options);
+
+                processedMap.set(key, maskedValue);
+            } else {
+                // If the key is not a string, we can't check it against sensitive content, but we still mask the value.
+                processedMap.set(key, maskData(value, options));
+            }
+        });
+
+        return processedMap as T;
+    }
 
     if (isObject(item)) {
         // Clone the item if immutability is required
@@ -98,17 +147,19 @@ export function maskData(item: unknown, options: IMaskDataOptions = {}): unknown
                 return acc;
             },
             options.immutable ? ({} as Record<string, unknown>) : processedItem
-        );
+        ) as T;
     }
 
     if (Array.isArray(item)) {
-        return item.map(i => maskData(i, options));
+        return item.map(i => maskData(i, options)) as T;
     }
 
-    return item;
+    return item as T;
 }
 
-export function maskArguments(args: unknown[], options?: IMaskDataOptions): unknown[] {
-    if (isNullish(args) || args.length === 0) return args;
-    return args.map(arg => (typeof arg !== 'object' && typeof arg !== 'string' ? arg : maskData(arg, options)));
+export function maskArguments<T>(args: unknown[], options?: IMaskDataOptions): T[] {
+    if (isNullish(args) || args.length === 0) return args as T[];
+    return args.map(arg =>
+        typeof arg !== 'object' && typeof arg !== 'string' ? arg : maskData<T>(arg as T, options)
+    ) as T[];
 }

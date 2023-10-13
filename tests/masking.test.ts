@@ -196,6 +196,21 @@ describe('Test all possible masking', () => {
         expect(maskArguments(input)).toEqual(['array', 'with', 'strings', { passwordField: 'Hi**Me' }]);
     });
 
+    it('should mask a map of strings', () => {
+        const map = new Map<string, unknown>();
+        map.set('password', 'SuperSecret');
+        map.set('nested', {
+            cc: '9876-5432-1098-7654'
+        });
+        map.set('wild', ['This is not masked', { passwordField: 'blerch' }]);
+        const result = maskData<Map<string, unknown>>(map);
+        expect(result).not.toBe(map);
+        expect(result.get('password')).toBe('Su*******et');
+        expect(result.get('nested')).toEqual({
+            cc: '98***************54'
+        });
+    });
+
     it('should mask an arbitrary object', () => {
         const obj = {
             password: 'SuperSecret',
@@ -221,5 +236,42 @@ describe('Test all possible masking', () => {
             },
             wild: ['This is not masked', { passwordField: 'bl**ch' }]
         });
+    });
+
+    it('masks sensitive content in a string with a custom regex', () => {
+        // Define a custom regex that identifies a pattern "customSensitiveData: any-text-here"
+        const customRegExp = { customPattern: /customSensitiveData:\s*(\S+)/gi };
+
+        // Mock data that includes the pattern our custom regex should catch
+        const stringWithCustomSensitive = `This is a string with customSensitiveData:verySensitive data which should be masked`;
+
+        // Call maskData with the mockData and custom regex
+        const result = maskString(stringWithCustomSensitive, undefined, customRegExp);
+
+        // Assert that the returned value matches the expected result
+        expect(result).toEqual('This is a string with cu*****************************ve data which should be masked');
+    });
+
+    it('masks sensitive data identified by a custom regular expression', () => {
+        // Define a custom regex that identifies a pattern "customSensitiveData: any-text-here"
+        const customRegExp = { customPattern: /customSensitiveData:\s*(\S+)/gi };
+
+        // Mock data that includes the pattern our custom regex should catch
+        const data = {
+            id: 1,
+            name: 'Test Name',
+            customField: 'customSensitiveData: verySensitive'
+        };
+
+        const expectedResult = {
+            ...data,
+            customField: 'cu******************************ve'
+        };
+
+        // Call maskData with the mockData and custom regex
+        const result = maskData(data, { customPatterns: customRegExp });
+
+        // Assert that the returned value matches the expected result
+        expect(result).toEqual(expectedResult);
     });
 });
