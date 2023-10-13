@@ -74,30 +74,24 @@ export function maskData(item: unknown, keyCheck?: (key: string) => boolean, imm
     }
 
     if (isObject(item)) {
-        if (immutable) {
-            item = deepClone(item);
-            return Object.entries(item).reduce((acc, [key, value]) => {
-                return {
-                    ...acc,
-                    [key]: keyCheck(key)
-                        ? isString(value)
-                            ? maskSensitiveValue(value)
-                            : maskData(value, keyCheck, immutable)
-                        : maskData(value, keyCheck, immutable) // pass the immutable flag recursively
-                };
-            }, {} as Record<string, unknown>);
-        } else {
-            // When not immutable, we directly mutate the item. TypeScript might complain here, so we assert the type.
-            const mutableItem = item as Record<string, unknown>;
-            Object.entries(item).forEach(([key, value]) => {
-                mutableItem[key] = keyCheck(key)
-                    ? isString(value)
-                        ? maskSensitiveValue(value)
-                        : value
-                    : maskData(value, keyCheck, immutable);
-            });
-            return mutableItem;
-        }
+        // Clone the item if immutability is required
+        const processedItem = immutable ? deepClone(item) : item;
+
+        const assignMaskedValue = (obj: Record<string, unknown>, key: string, value: unknown) => {
+            obj[key] = keyCheck(key)
+                ? isString(value)
+                    ? maskSensitiveValue(value)
+                    : maskData(value, keyCheck, immutable)
+                : maskData(value, keyCheck, immutable);
+        };
+
+        return Object.entries(processedItem).reduce(
+            (acc, [key, value]) => {
+                assignMaskedValue(acc, key, value);
+                return acc;
+            },
+            immutable ? ({} as Record<string, unknown>) : processedItem
+        );
     }
 
     if (Array.isArray(item)) {
