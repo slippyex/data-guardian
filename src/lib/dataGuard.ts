@@ -102,13 +102,8 @@ export function maskData(item: unknown, keyCheck?: (key: string) => boolean, imm
 }
 
 export function maskArguments(args: unknown[], keyCheck?: (key: string) => boolean, immutable = true): unknown[] {
-    if (isNullish(args)) return args;
-    if (!Array.isArray(args)) return args;
-    if (args.length === 0) return [];
-    return args.map(arg => {
-        if (typeof arg !== 'object' && typeof arg !== 'string') {
-            return arg;
-        }
-        return maskData(arg, keyCheck, immutable);
-    });
+    if (isNullish(args) || args.length === 0) return args;
+    return args.map(arg =>
+        typeof arg !== 'object' && typeof arg !== 'string' ? arg : maskData(arg, keyCheck, immutable)
+    );
 }
