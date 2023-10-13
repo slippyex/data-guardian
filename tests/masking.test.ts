@@ -1,6 +1,68 @@
 import { maskArguments, maskData, maskString } from '../src/';
 
 describe('Test all possible masking', () => {
+    it('should be able to deal with nullish values', () => {
+        expect(maskData(null)).toBe(null);
+        expect(maskString(null)).toBe(null);
+        expect(maskArguments([null])).toEqual([null]);
+        expect(maskArguments(null)).toBe(null);
+
+        expect(maskData(undefined)).toBe(undefined);
+        expect(maskString(undefined)).toBe(undefined);
+        expect(maskArguments([undefined])).toEqual([undefined]);
+        expect(maskArguments(undefined)).toBe(undefined);
+    });
+
+    it('should be able to handle empty strings', () => {
+        expect(maskData('')).toBe('');
+        expect(maskString('')).toBe('');
+        expect(maskArguments([''])).toEqual(['']);
+        expect(maskData({ emptyString: '' })).toEqual({ emptyString: '' });
+        expect(maskData({ password: '' })).toEqual({ password: '' });
+    });
+
+    it('should mask a simple object', () => {
+        const input = {
+            password: 'testpassword'
+        };
+        expect(maskData(input)).toEqual({
+            password: 'te********rd'
+        });
+    });
+
+    it('should pertain immutability of the original simple object', () => {
+        const input = {
+            password: 'testpassword'
+        };
+        type Input = typeof input;
+        const result = maskData(input);
+        expect(result).not.toBe(input);
+        expect((input as Input).password).toBe('testpassword');
+    });
+
+    it('should pertain immutability of the original complex object', () => {
+        const input = {
+            userData: {
+                password: 'testpassword',
+                credentials: {
+                    email: 'john@doe.com'
+                }
+            }
+        };
+        type Input = typeof input;
+        const result = maskData(input);
+        expect(result).not.toBe(input);
+        expect((result as Input).userData.credentials.email).toBe('jo********om');
+        expect((input as Input).userData.credentials.email).toBe('john@doe.com');
+    });
+
+    it('should mutate the original object', () => {
+        const input = {
+            password: 'testpassword'
+        };
+        maskData(input, null, false);
+        expect((input as { password: string }).password).not.toBe('testpassword');
+    });
 
     it('should passthrough a boolean', () => {
         expect(maskData(true)).toBe(true);
@@ -57,7 +119,11 @@ describe('Test all possible masking', () => {
     });
 
     it('should mask a UUID', () => {
-        expect(maskString('my super generic and random UUID 123e4567-e89b-12d3-a456-426614174000 is really something to be proud of')).toBe(
+        expect(
+            maskString(
+                'my super generic and random UUID 123e4567-e89b-12d3-a456-426614174000 is really something to be proud of'
+            )
+        ).toBe(
             'my super generic and random UUID 12********************************00 is really something to be proud of'
         );
     });
@@ -141,10 +207,7 @@ describe('Test all possible masking', () => {
                     password: 'Yf3Ujxxxy12oAY0l'
                 }
             },
-            wild: [
-                'This is not masked',
-                { passwordField: 'blerch'}
-            ]
+            wild: ['This is not masked', { passwordField: 'blerch' }]
         };
         expect(maskData(obj)).toEqual({
             password: 'Su*******et',
@@ -156,10 +219,7 @@ describe('Test all possible masking', () => {
                 recruiter_email: 'gu**********************de',
                 safeString: 'Hello, World!'
             },
-            wild: [
-                'This is not masked',
-                { passwordField: 'bl**ch'}
-            ]
+            wild: ['This is not masked', { passwordField: 'bl**ch' }]
         });
     });
 });

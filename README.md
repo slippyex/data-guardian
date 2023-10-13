@@ -1,77 +1,74 @@
-# Data-Guardian-Masker
+# data-guardian-masker 🔒
 
-`Data-Guardian-Masker` is a robust JavaScript utility with zero-dependency crafted to secure sensitive strings and objects by masking confidential data within them. This library is indispensable in contexts where data privacy is paramount, such as logging, debugging, or displaying data that contains sensitive information.
+`data-guardian-masker` is a nimble, zero-dependency NPM package crafted for developers who prioritize data security and privacy. This handy utility enables you to mask sensitive strings and object properties, safeguarding critical data from prying eyes, especially in logs or UI displays. Notably, it maintains the immutability of your data by default, though this feature is optional and customizable based on your needs.
 
-## Key Features
+## ✨ Features
 
-- Comprehensive: Masks a wide array of sensitive data, including passwords, emails, credit card numbers, social security numbers, URLs, and IP addresses.
-- Customizable: Allows for custom configurations to define data sensitivity, extending the flexibility of what can be considered sensitive.
-- Deep Scanning: Efficiently handles different data structures like objects and arrays, providing thorough masking of nested sensitive data.
-- Intelligent Masking: Ensures only string data is masked, leaving other data types untouched for structural integrity.
-- zero-dependency: No external libraries required. Small footprint and easy to integrate into any project.
-- immutable: Does not mutate the original data structure. Returns a new object with masked data.
-- TypeScript Support: Written in TypeScript with full type definitions.
+- 🔒 **String Masking**: Conceal parts of a string to hide sensitive data while keeping some characters visible for validation.
+- 🕵️ **Object Masking**: Automatically masks properties identified as sensitive in objects.
+- 🔮 **Immutability (Optional)**: By default, it doesn't alter your original data structure unless configured to do so.
+- 🖌️ **Custom Masking**: Define your custom logic to pinpoint which keys in objects should be masked.
+- 📦 **Lightweight**: No dependencies, no bloat. `data-guardian-masker` is a lightweight package that won't slow down your app.
 
-## Installation
+## 🚀 Getting Started
 
-`Data-Guardian-Masker` is an ES module. Simply include it in your project by copying the source code into a `.js` or `.ts` file and import it as usual.
+### Installation
 
-## Usage
-
-### Masking Strings
-
-```javascript
-import { maskString } from 'data-guardian-masker';
-
-// Basic usage
-const originalString = 'This string contains a credit card number: 1234 5678 9101 1121.';
-const maskedString = maskString(originalString);
-console.log(maskedString); // The credit card number will be masked
-
-// Selective masking
-const url = 'Visit my site at https://www.example.com. It is a great site! And here is my mail: john.doe@acme.com';
-const maskedUrl = maskString(url, ['url']);
-console.log(maskedUrl); // The URL will be masked but the email will still be clear-text
+```sh
+npm install data-guardian-masker
 ```
 
-### Masking Complex Data Structures
+### Usage
+
+Here's a quick peek at how `data-guardian-masker` can be integrated into your JavaScript/TypeScript projects:
 
 ```javascript
-import { dataGuard } from 'data-guardian-masker';
+const { maskData, maskString, maskArguments } = require('data-guardian-masker');
 
-const userObject = {
-  username: 'realUser',
-  password: 'verySecretPassword!',
-  personalDetails: {
-    email: 'private@email.com',
-    ssn: '111-22-3333',
-  },
-  paymentMethods: [
-    '1234 5678 9101 1121',
-    '4321 8765 1098 7654'
-  ]
+// Masking a string
+console.log(maskString('SensitiveData123!')); // Output: "Se************123!"
+
+// Masking object's properties
+const user = { username: 'johndoe', password: 'SuperSecretPassword!' };
+console.log(maskData(user)); // Output: { username: 'johndoe', password: 'Su***************d!' }
+
+// Masking arguments list
+console.log(maskArguments(['SensitiveArgument1', 'SensitiveArgument2'])); // Output: ["Se*****************1", "Se*****************2"]
+```
+
+## 🛡️ Immutability
+
+By default, `data-guardian-masker` preserves the immutability of your data, meaning your original input remains untouched. However, if you prefer to alter the original data, you can do so by setting the immutability option to `false`.
+
+```javascript
+const user = { password: 'SuperSecretPassword!' };
+maskData(user, null, false); // This will mutate the `user` object
+console.log(user); // Output: { password: 'Su***************d!' }
+```
+
+## ⚙️ Customization
+
+You're not limited to the predefined sensitive data types! Extend the functionality by providing a custom function to determine which keys to mask:
+
+```javascript
+const customMaskingLogic = (key) => {
+// add your custom logic here. Return true for keys you want to mask
+return ['customSensitiveKey', 'anotherSensitiveKey'].includes(key);
 };
 
-const maskedUser = maskData(userObject);
-console.log(maskedUser); // All sensitive information will be masked
+const data = { customSensitiveKey: 'HideThis', anotherSensitiveKey: 'AndThis', normalKey: 'ButNotThis' };
+console.log(maskData(data, customMaskingLogic)); // Output: { customSensitiveKey: 'Hi******s', anotherSensitiveKey: 'An******s', normalKey: 'ButNotThis' }
 ```
 
-### Custom Sensitivity Definition
+## ⚠️ Disclaimer
 
-```javascript
-const customSensitivityCheck = (key) => ['customSensitive', 'privateKey'].includes(key);
-const customMaskedData = maskData(userObject, customSensitivityCheck);
-console.log(customMaskedData); // Masking applied with custom sensitivity definitions
-```
+`data-guardian-masker` is designed to provide an additional layer of security by masking strings and object properties that contain sensitive information. However, it is not a substitute for comprehensive security practices. Ensure you follow industry standards and regulations for data protection and privacy.
 
-## Contributions
+## 🎈 Contributing
 
-Contributions to enhance `Data-Guardian-Masker` are warmly welcomed. Feel free to submit pull requests or open issues to discuss potential improvements. Please ensure your contributions are well-documented and tested, maintaining the library's integrity.
+If you have ideas on how to improve `data-guardian-masker` or want to report a bug, please open an issue or submit a pull request. We appreciate your help and contributions!
 
-## License
+## 📜 License
 
-`Data-Guardian-Masker` is MIT licensed. Refer to the `LICENSE` file for detailed information.
+MIT
 
-## Disclaimer
-
-While `Data-Guardian-Masker` is designed to prevent unintentional exposure of sensitive data in various structures, it is not a substitute for comprehensive security measures. Always ensure sensitive data is handled with stringent security practices, including encryption and secure data storage/transmission.
