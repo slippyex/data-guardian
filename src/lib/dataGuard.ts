@@ -2,6 +2,11 @@ import { deepClone, isNullish, isObject, isString } from '../utils/helpers';
 
 type SensitiveContentKey = keyof typeof sensitiveContentRegExp;
 
+interface IMaskDataOptions {
+    keyCheck?: (key: string) => boolean;
+    immutable?: boolean;
+}
+
 const defaultSensitiveKeyFragments: Set<string> = new Set([
     'password',
     'pwd',
@@ -65,24 +70,26 @@ export function maskString(
     return maskedValue;
 }
 
-export function maskData(item: unknown, keyCheck?: (key: string) => boolean, immutable = true): unknown {
-    if (!keyCheck) {
-        keyCheck = shouldMaskKey;
-    }
+export function maskData(item: unknown, options: IMaskDataOptions = {}): unknown {
+    const { keyCheck = shouldMaskKey, immutable = true } = options;
+
     if (isString(item)) {
         return maskString(item);
     }
 
+    options.keyCheck = keyCheck;
+    options.immutable = immutable;
+
     if (isObject(item)) {
         // Clone the item if immutability is required
-        const processedItem = immutable ? deepClone(item) : item;
+        const processedItem = options.immutable ? deepClone(item) : item;
 
         const assignMaskedValue = (obj: Record<string, unknown>, key: string, value: unknown) => {
-            obj[key] = keyCheck(key)
+            obj[key] = options.keyCheck(key)
                 ? isString(value)
                     ? maskSensitiveValue(value)
-                    : maskData(value, keyCheck, immutable)
-                : maskData(value, keyCheck, immutable);
+                    : maskData(value, options)
+                : maskData(value, options);
         };
 
         return Object.entries(processedItem).reduce(
@@ -90,20 +97,18 @@ export function maskData(item: unknown, keyCheck?: (key: string) => boolean, imm
                 assignMaskedValue(acc, key, value);
                 return acc;
             },
-            immutable ? ({} as Record<string, unknown>) : processedItem
+            options.immutable ? ({} as Record<string, unknown>) : processedItem
         );
     }
 
     if (Array.isArray(item)) {
-        return item.map(i => maskData(i, keyCheck, immutable));
+        return item.map(i => maskData(i, options));
     }
 
     return item;
 }
 
-export function maskArguments(args: unknown[], keyCheck?: (key: string) => boolean, immutable = true): unknown[] {
+export function maskArguments(args: unknown[], options?: IMaskDataOptions): unknown[] {
     if (isNullish(args) || args.length === 0) return args;
-    return args.map(arg =>
-        typeof arg !== 'object' && typeof arg !== 'string' ? arg : maskData(arg, keyCheck, immutable)
-    );
+    return args.map(arg => (typeof arg !== 'object' && typeof arg !== 'string' ? arg : maskData(arg, options)));
 }

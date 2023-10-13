@@ -60,7 +60,7 @@ describe('Test all possible masking', () => {
         const input = {
             password: 'testpassword'
         };
-        maskData(input, null, false);
+        maskData(input, { immutable: false });
         expect((input as { password: string }).password).not.toBe('testpassword');
     });
 
@@ -183,7 +183,7 @@ describe('Test all possible masking', () => {
             safeString: 'Hello, World!'
         };
         const customKeyCheck = (key: string) => ['arbitraryKeyToMask', 'anotherSensitiveKey'].includes(key);
-        const maskedDataWithCustomCheck = maskData(data, customKeyCheck);
+        const maskedDataWithCustomCheck = maskData(data, { keyCheck: customKeyCheck, immutable: true });
         expect(maskedDataWithCustomCheck).toEqual({
             arbitraryKeyToMask: 'Oh*****************ed',
             anotherSensitiveKey: 'No************************o!',

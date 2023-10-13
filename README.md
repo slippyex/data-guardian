@@ -58,7 +58,7 @@ By default, `data-guardian` preserves the immutability of your data, meaning you
 
 ```javascript
 const user = { password: 'SuperSecretPassword!' };
-maskData(user, null, false); // This will mutate the `user` object
+maskData(user, { immutable: false }); // This will mutate the `user` object
 console.log(user); // Output: { password: 'Su***************d!' }
 ```
 
@@ -73,7 +73,7 @@ return ['customSensitiveKey', 'anotherSensitiveKey'].includes(key);
 };
 
 const data = { customSensitiveKey: 'HideThis', anotherSensitiveKey: 'AndThis', normalKey: 'ButNotThis' };
-console.log(maskData(data, customMaskingLogic)); // Output: { customSensitiveKey: 'Hi******s', anotherSensitiveKey: 'An******s', normalKey: 'ButNotThis' }
+console.log(maskData(data, { keyCheck: customMaskingLogic })); // Output: { customSensitiveKey: 'Hi******s', anotherSensitiveKey: 'An******s', normalKey: 'ButNotThis' }
 ```
 
 ## ⚠️ Disclaimer
