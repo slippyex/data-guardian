@@ -1,5 +1,5 @@
 {
-  "name": "data-guardian-masker",
+  "name": "data-guardian",
   "version": "1.0.0",
   "description": "Tiny, zero-dependencies, package which tries to mask sensitive data in arbitrary objects and strings.",
   "main": ".build/src/index.js",
@@ -18,7 +18,7 @@
     "test:ci": "CI=true jest --coverage=true"
   },
   "author": "Markus Velten",
-  "repository": "https://github.com/slippyex/data-guardian-masker.git",
+  "repository": "https://github.com/slippyex/data-guardian.git",
   "license": "MIT",
   "private": false,
   "keywords": [
