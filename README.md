@@ -28,6 +28,10 @@ const { maskData, maskString, maskArguments } = require('data-guardian-masker');
 // Masking a string
 console.log(maskString('SensitiveData123!')); // Output: "Se************123!"
 
+// Masking an arbitary string with sensitive data
+console.log(maskString('a dude once exposed his super secret A1vbcvc.De#3435?r password to the world but luckily we could help')); 
+// Output: "a dude once exposed his super secret A1***********35?r password to the world but luckily we could help"
+
 // Masking object's properties
 const user = { username: 'johndoe', password: 'SuperSecretPassword!' };
 console.log(maskData(user)); // Output: { username: 'johndoe', password: 'Su***************d!' }
@@ -35,6 +39,18 @@ console.log(maskData(user)); // Output: { username: 'johndoe', password: 'Su****
 // Masking arguments list
 console.log(maskArguments(['SensitiveArgument1', 'SensitiveArgument2'])); // Output: ["Se*****************1", "Se*****************2"]
 ```
+
+## 📚 Defaults
+By default, `data-guardian-masker` masks the following data types in free-form strings and object properties:
+* credit card numbers
+* email addresses
+* IPv4 addresses
+* UUIDs
+* phone numbers
+* social security numbers
+* URLs
+* Passwords
+* Custom sensitive data (see [Customization](#-customization))
 
 ## 🛡️ Immutability
 
