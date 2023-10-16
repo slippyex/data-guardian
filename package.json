@@ -1,7 +1,7 @@
 {
   "name": "data-guardian",
-  "version": "1.0.4",
-  "description": "Tiny, zero-dependencies, package which tries to mask sensitive data in arbitrary objects and strings.",
+  "version": "1.0.5",
+  "description": "Tiny, zero-dependencies, package which tries to mask sensitive data in arbitrary collections, errors, objects and strings.",
   "main": ".build/src/index.js",
   "files": [
     ".build/src"
@@ -58,7 +58,7 @@
     "eslint-formatter-table": "^7.32.1",
     "jest": "^28.1.1",
     "pre-commit": "^1.2.2",
-    "prettier": "^2.7.1",
+    "prettier": "^3.0.3",
     "ts-jest": "^28.0.5",
     "ts-node": "^10.8.2",
     "typescript": "^5"

@@ -1,6 +1,18 @@
 import { deepClone } from '../src/utils/helpers';
 
 describe('deepClone tests', () => {
+    it('should clone a simple string', () => {
+        const str = 'test';
+        const cloned = deepClone(str);
+        expect(cloned).toBe('test');
+    });
+
+    it('should clone a primitive', () => {
+        const bool = true;
+        const cloned = deepClone(bool);
+        expect(cloned).toBe(true);
+    });
+
     // Clones an object with nested properties
     it('should clone an object with nested properties', () => {
         const obj = {
