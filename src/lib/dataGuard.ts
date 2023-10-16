@@ -117,6 +117,97 @@ export function maskString(
     return maskSensitiveContent(value, applicablePatterns, customSensitiveContentRegExp, options);
 }
 
+function maskMap<K, V>(item: Map<K, V>, options: IMaskDataOptions): Map<K, V> {
+    // Process Map items
+    const processedMap = options.immutable ? new Map<K, V>() : item;
+
+    item.forEach((value, key) => {
+        if (typeof key === 'string') {
+            processedMap.set(key, performMasking(key, value, options));
+        } else {
+            // If the key is not a string, we can't check it against sensitive content, but we still mask the value.
+            processedMap.set(key, maskData(value, options));
+        }
+    });
+
+    return processedMap;
+}
+
+function maskSet<T>(item: Set<T>, options: IMaskDataOptions): Set<T> {
+    const processedSet = options.immutable ? new Set<T>() : item;
+
+    const toAdd: T[] = [];
+    const toRemove: T[] = [];
+
+    item.forEach(value => {
+        let maskedValue;
+        if (typeof value === 'string') {
+            // If the value is a string, perform masking
+            maskedValue = maskString(value, undefined, options.customPatterns, options) as T;
+        } else if (isObject(value) || Array.isArray(value) || value instanceof Map) {
+            // If the value is an object, array, or map, recursively call maskData
+            maskedValue = maskData(value, options);
+        } else {
+            // If the value is of any other type, just keep the original value
+            maskedValue = value as T;
+        }
+
+        if (options.immutable) {
+            // If immutability is required, add masked value to the new set
+            processedSet.add(maskedValue as T);
+        } else {
+            // If immutability is not required, track the original and masked values for later update
+            toAdd.push(maskedValue as T);
+            toRemove.push(value as T);
+        }
+    });
+
+    if (!options.immutable) {
+        // Update the original set
+        toRemove.forEach(value => item.delete(value));
+        toAdd.forEach(value => item.add(value));
+    }
+
+    return processedSet;
+}
+
+function maskError(item: Error, options: IMaskDataOptions): Error {
+    const maskedError = new Error(maskString(item.message, undefined, options.customPatterns, options));
+    maskedError.stack = maskString(item.stack, undefined, options.customPatterns, options);
+    return maskedError;
+}
+
+function maskObject<T>(item: T, options: IMaskDataOptions): T {
+    // Clone the item if immutability is required
+    const processedItem = options.immutable ? deepClone(item) : item;
+
+    const assignMaskedValue = (obj: Record<string, unknown>, key: string, value: unknown) => {
+        obj[key] = performMasking(key, value, options);
+    };
+
+    return Object.entries(processedItem).reduce(
+        (acc, [key, value]) => {
+            assignMaskedValue(acc as Record<string, T>, key, value);
+            return acc;
+        },
+        options.immutable ? ({} as Record<string, unknown>) : processedItem
+    ) as T;
+}
+
+function maskArray<T>(item: T[], options: IMaskDataOptions): T[] {
+    return item.map(i => maskData(i, options));
+}
+
+function performMasking<T>(key: string, value: unknown, options: IMaskDataOptions): T {
+    return (
+        options.keyCheck(key)
+            ? isString(value)
+                ? maskSensitiveValue(value, options?.maskingChar, options?.maskLength) // Pass maskLength here
+                : maskData(value, options)
+            : maskData(value, options)
+    ) as T;
+}
+
 export function maskData<T>(item: T, options: IMaskDataOptions = {}): T {
     const { keyCheck = shouldMaskKey, immutable = true } = options;
 
@@ -128,51 +219,24 @@ export function maskData<T>(item: T, options: IMaskDataOptions = {}): T {
     options.keyCheck = keyCheck;
     options.immutable = immutable;
 
-    const performMasking = (key: string, value: unknown, options: IMaskDataOptions): T => {
-        return (
-            options.keyCheck(key)
-                ? isString(value)
-                    ? maskSensitiveValue(value, options?.maskingChar, options?.maskLength) // Pass maskLength here
-                    : maskData(value, options)
-                : maskData(value, options)
-        ) as T;
-    };
-
     if (item instanceof Map) {
-        // Process Map items
-        const processedMap = options.immutable ? new Map<string, T>() : item;
+        return maskMap(item, options) as T;
+    }
 
-        item.forEach((value, key) => {
-            if (typeof key === 'string') {
-                processedMap.set(key, performMasking(key, value, options));
-            } else {
-                // If the key is not a string, we can't check it against sensitive content, but we still mask the value.
-                processedMap.set(key, maskData(value, options));
-            }
-        });
+    if (item instanceof Set) {
+        return maskSet(item, options) as T;
+    }
 
-        return processedMap as T;
+    if (item instanceof Error) {
+        return maskError(item, options) as T;
     }
 
     if (isObject(item)) {
-        // Clone the item if immutability is required
-        const processedItem = options.immutable ? deepClone(item) : item;
-
-        const assignMaskedValue = (obj: Record<string, unknown>, key: string, value: unknown) => {
-            obj[key] = performMasking(key, value, options);
-        };
-
-        return Object.entries(processedItem).reduce(
-            (acc, [key, value]) => {
-                assignMaskedValue(acc, key, value);
-                return acc;
-            },
-            options.immutable ? ({} as Record<string, unknown>) : processedItem
-        ) as T;
+        return maskObject<T>(item, options);
     }
 
     if (Array.isArray(item)) {
-        return item.map(i => maskData(i, options)) as T;
+        return maskArray(item, options) as T;
     }
 
     return item as T;

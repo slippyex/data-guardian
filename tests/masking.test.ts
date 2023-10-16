@@ -311,4 +311,53 @@ describe('Test all possible masking', () => {
         // Assert that the returned value matches the expected result
         expect(result).toEqual(expectedResult);
     });
+
+    it('should mask items in a set', () => {
+        const inputSet = new Set<string>();
+        inputSet.add('john.doe@acme.com');
+        inputSet.add('1234-4567-4321-1234');
+        inputSet.add('nothing to mask');
+        maskData(inputSet, { immutable: false });
+        expect(Array.from(inputSet.values())).toEqual(['jo*************om', '12***************34', 'nothing to mask']);
+
+        const inputSetImmutable = new Set<string>();
+        inputSetImmutable.add('john.doe@acme.com');
+        inputSetImmutable.add('1234-4567-4321-1234');
+        inputSetImmutable.add('nothing to mask');
+        const maskedSet = maskData(inputSetImmutable);
+        expect(Array.from(inputSetImmutable.values())).toEqual([
+            'john.doe@acme.com',
+            '1234-4567-4321-1234',
+            'nothing to mask'
+        ]);
+        expect(Array.from(maskedSet.values())).toEqual(['jo*************om', '12***************34', 'nothing to mask']);
+
+        const inputObjectSet = new Set<{ password: string; email: string; user: string }>();
+        inputObjectSet.add({ email: 'john.doe@acme.com', password: 'blerch1000', user: 'john.doe' });
+        maskData(inputObjectSet, { immutable: false });
+        expect(Array.from(inputObjectSet.values())).toEqual([
+            { email: 'jo*************om', password: 'bl******00', user: 'john.doe' }
+        ]);
+    });
+
+    it('should not mask anything', () => {
+        expect(maskString(null)).toBe(null);
+
+        expect(maskData({ x: null })).toEqual({ x: null });
+        expect(maskData({ x: true })).toEqual({ x: true });
+        expect(maskData({ x: 1 })).toEqual({ x: 1 });
+
+        expect(maskArguments([true, 1])).toEqual([true, 1]);
+        expect(maskArguments([null])).toEqual([null]);
+        expect(maskArguments([{ x: 1, y: false }])).toEqual([{ x: 1, y: false }]);
+
+        const s = new Set<number>();
+        expect(maskArguments([s])).toEqual([s]);
+    });
+
+    it('should mask sensitive data within Error objects', () => {
+        const error = new Error('Sensitive Error: Credit Card 1234-5678-9101-1121 is invalid');
+        const maskedError = maskData(error);
+        expect(maskedError.message).toBe('Sensitive Error: Credit Card 12***************21 is invalid');
+    });
 });

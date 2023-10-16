@@ -44,7 +44,6 @@ export function deepClone<T>(obj: T, visited = new WeakMap()): T {
 
         return objCopy as T;
     }
-    return obj;
 }
 
 export function isObject(item: unknown): item is Record<string, unknown> {
