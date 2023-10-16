@@ -56,7 +56,6 @@ describe('Test all possible masking', () => {
         expect(maskData(input, { maskingChar: '#', maskLength: 4 })).toEqual({
             password: '####1'
         });
-
     });
 
     it('should mask an arbitrary string with a custom char and a given maskLength', () => {
