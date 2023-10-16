@@ -359,5 +359,9 @@ describe('Test all possible masking', () => {
         const error = new Error('Sensitive Error: Credit Card 1234-5678-9101-1121 is invalid');
         const maskedError = maskData(error);
         expect(maskedError.message).toBe('Sensitive Error: Credit Card 12***************21 is invalid');
+
+        const sensitiveError = new Error('Sensitive message containing user password: SuperSecretPassword!');
+        const maskedErrorX = maskData(sensitiveError);
+        expect(maskedErrorX.message).toBe('Sensitive message containing user password: Su****************d!');
     });
 });
