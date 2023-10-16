@@ -1,7 +1,7 @@
 {
   "name": "data-guardian",
-  "version": "1.0.4",
-  "description": "Tiny, zero-dependencies, package which tries to mask sensitive data in arbitrary objects and strings.",
+  "version": "1.0.5",
+  "description": "Tiny, zero-dependencies, package which tries to mask sensitive data in arbitrary collections, errors, objects and strings.",
   "main": ".build/src/index.js",
   "files": [
     ".build/src"

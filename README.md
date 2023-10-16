@@ -11,10 +11,11 @@
 - 🕵️ **Object Masking**: Automatically masks properties identified as sensitive in objects.
 - 📜 **Argument Masking**: Mask sensitive data in an array of arguments.
 - 📝 **Custom Sensitive Data**: Define your own custom regular expressions to identify and mask sensitive data in strings.
-- 🗺️ **Map Support**: Mask sensitive data in Map instances.
+- 🗃️ **Collection Masking**: Automatically mask sensitive data in Map, Set, and Error instances.
 - 🔮 **Immutability (Optional)**: By default, it doesn't alter your original data structure unless configured to do so.
 - 🖌️ **Custom Masking**: Define your custom logic to pinpoint which keys in objects should be masked.
 - 📦 **Lightweight**: No dependencies, no bloat. `data-guardian` is a lightweight package that won't slow down your app.
+- ⚙️ **Configurable**: Set masking char to one of commonly used chars and length of chars to mask out
 
 ## 🚀 Getting Started
 
@@ -106,25 +107,60 @@ console.log(maskData(data, { keyCheck: customMaskingLogic }));
 ```
 
 ## 🌟 Advanced Usage
-Masking Data in a Map
+Masking Data in a Map, Set, and Error Instances
 
-`data-guardian` isn't limited to just plain objects; it can also work with Map instances! Here's how you can mask sensitive data stored in a Map:
+`data-guardian` extends its masking capabilities to Map, Set, and Error instances as well. Below are examples illustrating how to mask sensitive data stored in these structures:
+
+### Masking Data in a Map:
 
 ```javascript
 const sensitiveMap = new Map();
 sensitiveMap.set('username', 'johndoe');
 sensitiveMap.set('password', 'SuperSecretPassword!');
 
-const maskedMap = maskData(sensitiveMap, {
-  keyCheck: (key) => key === 'password', // Only mask the 'password' key
-  immutable: true // Returns a new Map instance, keeping the original sensitiveMap unchanged
-});
-
+const maskedMap = maskData(sensitiveMap);
 console.log(Array.from(maskedMap.entries()));
 // Output: [["username", "johndoe"], ["password", "Su***************d!"]]
 ```
 
+### Masking Data in a Set:
+
+```javascript
+const sensitiveSet = new Set(['SensitiveData1', 'SensitiveData2']);
+const maskedSet = maskData(sensitiveSet);
+console.log(Array.from(maskedSet));
+// Output: ["Se**************1", "Se**************2"]
+```
+
+### Masking Data in an Error:
+
+```javascript
+const sensitiveError = new Error('Sensitive message containing user password: SuperSecretPassword!');
+const maskedError = maskData(sensitiveError);
+console.log(maskedError.message);
+// Output: "Sensitive message containing user password: Su***************d!"
+```
+
 Remember, when working with Maps, the immutable option is especially handy as it prevents the original Map from being altered, ensuring data integrity and consistency across your application.
+
+### Custom Masking Configuration:
+`data-guardian` allows for custom configuration through the `IMaskDataOptions` interface. You can specify a custom function to determine which keys to mask in objects, set a custom masking character, and define the length of characters to mask out among other options:
+
+```javascript
+const customMaskingConfig = {
+    keyCheck: (key) => key.includes('Sensitive'),
+    maskingChar: '#',
+    maskLength: 10,
+};
+
+const data = {
+    id: 1,
+    SensitiveInfo: 'VerySensitiveData',
+};
+
+console.log(maskData(data, customMaskingConfig));
+// Output: { id: 1, SensitiveInfo: 'Very##########Data' }
+```
 
 ## ⚠️ Disclaimer
 
