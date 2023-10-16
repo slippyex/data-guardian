@@ -30,6 +30,44 @@ describe('Test all possible masking', () => {
         });
     });
 
+    it('should mask a simple object with different char', () => {
+        const input = {
+            password: 'testpassword'
+        };
+        expect(maskData(input, { maskingChar: '#' })).toEqual({
+            password: 'te########rd'
+        });
+    });
+
+    it('should mask a simple object with different char and mask-length', () => {
+        const input = {
+            password: 'testpassword'
+        };
+        expect(maskData(input, { maskingChar: '#', maskLength: 4 })).toEqual({
+            password: 'test####word'
+        });
+
+        input.password = 'test';
+        expect(maskData(input, { maskingChar: '#', maskLength: 4 })).toEqual({
+            password: '####'
+        });
+
+        input.password = 'test1';
+        expect(maskData(input, { maskingChar: '#', maskLength: 4 })).toEqual({
+            password: '####1'
+        });
+
+    });
+
+    it('should mask an arbitrary string with a custom char and a given maskLength', () => {
+        const arbitraryString =
+            'a weird guy once forgot to mask his super secret password o!kxXYkx2346#1.3! ... but we could help';
+        const masked = maskString(arbitraryString, null, {}, { maskingChar: '.', maskLength: 6 });
+        expect(masked).toBe(
+            'a weird guy once forgot to mask his super secret password o!kxX......6#1.3! ... but we could help'
+        );
+    });
+
     it('should pertain immutability of the original simple object', () => {
         const input = {
             password: 'testpassword'

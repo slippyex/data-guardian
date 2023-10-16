@@ -58,7 +58,7 @@
     "eslint-formatter-table": "^7.32.1",
     "jest": "^28.1.1",
     "pre-commit": "^1.2.2",
-    "prettier": "^2.7.1",
+    "prettier": "^3.0.3",
     "ts-jest": "^28.0.5",
     "ts-node": "^10.8.2",
     "typescript": "^5"
