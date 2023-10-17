@@ -133,7 +133,7 @@ describe('Test all possible masking', () => {
                 'a dude once exposed his super secret A1vbcvc.De#3435?r password to the world but luckily we could help'
             )
         ).toBe(
-            'a dude once exposed his super secret A1***********35?r password to the world but luckily we could help'
+            'a dude once exposed his super secret A1***********35?r password ** the world but luckily we could help'
         );
     });
 
@@ -180,7 +180,7 @@ describe('Test all possible masking', () => {
         and my email john.doe@acme.com on the website, a friend recommended ... it can be found under https://www.acme.com/scam?user=john.doe&password=A1vbcvc.De#3435?r`;
         const result = maskString(fullText);
         expect(result).toBe(
-            `I once entered my credit card number 12***************21 and my password A1***********35?r
+            `I once entered my credit card number 12***************21 and my password A1*************?r
         and my email jo*************om on the website, a friend recommended ... it can be found under ht**************************************************************?r`
         );
     });
@@ -363,5 +363,18 @@ describe('Test all possible masking', () => {
         const sensitiveError = new Error('Sensitive message containing user password: SuperSecretPassword!');
         const maskedErrorX = maskData(sensitiveError);
         expect(maskedErrorX.message).toBe('Sensitive message containing user password: Su****************d!');
+    });
+
+    it('should mask any explicit password mentions', () => {
+        expect(maskString('here is my password: test01!')).toBe('here is my password: te***1!');
+        expect(maskString('here is my SecretPassword: test')).toBe('here is my SecretPassword: ****');
+        expect(maskString('here is my passwd test')).toBe('here is my passwd ****');
+        expect(maskString('here is my pwd test01!')).toBe('here is my pwd te***1!');
+    });
+
+    it('should capture any password in an uri-based string fragment', () => {
+        expect(
+            maskString('connection to postgres://dbuser:MySuperSecretPassword@myhost.com successfully established')
+        ).toBe('connection to postgres://dbuser:My*****************rd@myhost.com successfully established');
     });
 });

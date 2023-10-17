@@ -40,9 +40,15 @@ const sensitiveContentRegExp = {
     ssn: /\b[0-9]{3}-[0-9]{2}-[0-9]{4}\b/g,
     url: /\b(?:https?|ftp):\/\/[a-z0-9-+&@#/%?=~_|!:,.;]*[a-z0-9-+&@#/%=~_|]\b/gi,
     ipv4: /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g,
-    email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
-    password: /(?=\S*\d)(?=\S*[A-Za-z])[\w!@#$%^&*()_+=\-,.]{6,}/gm,
-    passwordFollowingText: /(?<=password:\s*)\S+/gi,
+    email: /(?<=^|[\s'"-#+.><])[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+    password: /\b(?=\S*\d)(?=\S*[A-Za-z])[\w!@#$%^&*()_+=\-,.]{6,}\b/gm,
+    passwordInUri: /(?<=:\/\/[^:]+:)[^@]+?(?=@)/,
+    //    passwordMention: /(?<=.*(password|passwd|pwd)[:\s*]?)[^\s:]+/gi,
+    passwordMention: /(?<=.*(password|passwd|pwd)(?:\s*:\s*|\s+))\S+/gi,
+
+    //    passwordMentionWithColon: /(?<=.*(password|passwd|pwd):\s*)[^\s:]+/gi,
+    //    passwordMentionWithoutColon: /(?<=.*(password|passwd|pwd)\s+)[^\s:]+/gi,
+
     uuid: /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi
 } as const;
 
