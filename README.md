@@ -187,6 +187,44 @@ console.log(maskData({ username: 'johndoe', password: '##SuperSecretPassword!##'
 
 This section provides detailed information about the functions available in the Sensitive Content Masker library.
 
+### Types
+SensitiveContentKey
+
+An alias for the keys of the sensitiveContentRegExp object.
+
+```typescript
+declare const sensitiveContentRegExp: {
+    readonly creditCard: RegExp;
+    readonly ssn: RegExp;
+    readonly url: RegExp;
+    readonly ipv4: RegExp;
+    readonly email: RegExp;
+    readonly password: RegExp;
+    readonly uuid: RegExp;
+};
+```
+
+### MaskingChar
+
+A union type representing the characters that can be used for masking. 
+Can be one of the following characters: 
+```typescript
+type MaskingChar = 'X' | 'x' | '$' | '/' | '.' | '*' | '#' | '+' | '@' | '-' | '_' | ' ';
+```
+
+### IMaskDataOptions
+
+An interface representing the available options for masking.
+
+    keyCheck (function): A function that checks if a key should have its value masked. Accepts a string and returns a boolean.
+    immutable (boolean): Whether the original data structure should be preserved, and an entirely new one created. Default is true.
+    customPatterns (object): An object where keys are custom types and values are RegExp objects used for identifying sensitive content.
+    maskingChar (MaskingChar): The character used for masking content.
+    maskLength (number): The length of the mask to apply on the sensitive content.
+    types (SensitiveContentKey[]): The types of sensitive content to check for.
+    customSensitiveContentRegExp (object): An object similar to customPatterns, but used only in certain masking contexts.
+    fixedMaskLength (boolean): When enabled, masks the sensitive content with a fixed number of characters. Default is 'false'.
+
 ### `maskString(value: string, options?: Partial<IMaskOptions>): string`
 
 Masks sensitive parts of a string based on the provided options.
@@ -194,14 +232,7 @@ Masks sensitive parts of a string based on the provided options.
 #### Parameters
 
 - `value` (string): The string containing potential sensitive content that needs to be masked.
-- `options` (Object, optional): A set of configurations for the masking process. This includes:
-    - `maskingChar` (string, default: '*'): The character used for masking sensitive content.
-    - `maskLength` (number, default: consistent with the length of sensitive content): The number of characters to show in the mask. If `fixedMaskLength` is set to true, `maskLength` will determine the exact number of masking characters, regardless of the original content length.
-    - `types` (Array<string>, optional): Predefined types of sensitive information to mask, such as 'creditCard', 'ssn', 'password', etc.
-    - `fixedMaskLength` (boolean, default: false): Determines if the mask should display a fixed number of characters.
-    - `customPatterns` (Object, optional): Custom regular expressions for identifying and masking additional types of sensitive content. The keys are custom names, and the values are the RegExp patterns.
-    - `immutable` (boolean, default: false): If true, the function returns a new string with masked content, keeping the original string unaltered.
-    - `keyCheck` (Function, not used here but applicable in `maskData`): A callback function used to check if an object's key should have its value masked.
+- `options` (Partial<IMaskDataOptions>, optional): A set of configurations for the masking process.
 
 #### Return value
 
@@ -214,13 +245,29 @@ Recursively masks sensitive data in an object, array, or any other nested struct
 #### Parameters
 
 - `data` (T): The data structure containing potential sensitive information. It could be an object, array, Map, Set, etc.
-- `options` (Object, optional): A set of configurations for the masking process, similar to the `maskString` function. Additionally, it uses the `keyCheck` function to decide if an object's key should have its value masked, based on the key name.
+- `options` (Partial<IMaskDataOptions>, optional): A set of configurations for the masking process, similar to the `maskString` function. Additionally, it uses the `keyCheck` function to decide if an object's key should have its value masked, based on the key name.
 
 #### Return value
 
 - (T): A new data structure with the same type as the input, containing masked sensitive content. If `immutable` is false, it alters the original data; otherwise, it returns a new instance.
 
 These functions are generic and designed to handle various types of data structures, ensuring sensitive information is adequately masked while retaining the original data format and type.
+
+
+### `maskArguments(func: (...args: any[]) => any, options?: Partial<IMaskOptions>): (...args: any[]) => any`
+
+Wraps a function and masks sensitive information within the arguments passed to it, based on the provided options. This is particularly useful for logging or monitoring systems where function arguments may contain sensitive data.
+
+#### Parameters
+
+- `func` (Function): The original function that will be called with the masked arguments. This function takes any number of arguments and can return any type of data.
+- `options` (Partial<IMaskDataOptions>, optional): A set of configurations for the masking process.
+
+#### Return value
+
+- (Function): A new function that takes the same parameters as the original one. When this function is called, it masks the arguments as per the specified options and then calls the original function with these masked arguments. The return value of this new function is the same as that of the original function.
+
+The `maskArguments` function is essential for scenarios where sensitive information might be passed to functions that log, transmit, or manipulate this data in ways that could lead to exposure. By masking arguments automatically, this method helps maintain data privacy and security without requiring significant changes to existing codebases.
 
 ## ⚠️ Disclaimer
 
