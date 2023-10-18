@@ -137,9 +137,32 @@ function unmaskContent(value: string): { isUnmasked: boolean; content: string } 
     return { isUnmasked, content };
 }
 
-// Overload signatures
+/**
+ * Masks sensitive parts of a string based on predefined and custom patterns.
+ *
+ * @param {string} value - The string to mask.
+ * @returns {string} The masked string.
+ */
 export function maskString(value: string): string;
+
+/**
+ * Masks sensitive parts of a string based on provided options.
+ *
+ * @param {string} value - The string to mask.
+ * @param {Partial<IMaskDataOptions>} options - The options to customize the masking process.
+ * @returns {string} The masked string.
+ */
 export function maskString(value: string, options: Partial<IMaskDataOptions>): string;
+
+/**
+ * Masks sensitive parts of a string based on specified types and optionally custom patterns and options.
+ *
+ * @param {string} value - The string to mask.
+ * @param {SensitiveContentKey[]} types - The types of sensitive content to mask.
+ * @param {Record<string, RegExp>} [customSensitiveContentRegExp] - Custom regular expressions for detecting sensitive content.
+ * @param {Partial<IMaskDataOptions>} [options] - The options to customize the masking process.
+ * @returns {string} The masked string.
+ */
 export function maskString(
     value: string,
     types: SensitiveContentKey[], // This remains non-optional
@@ -147,7 +170,6 @@ export function maskString(
     options?: Partial<IMaskDataOptions>
 ): string;
 
-// Function implementation
 export function maskString(
     value: string,
     typesOrOptions?: SensitiveContentKey[] | Partial<IMaskDataOptions>, // This should be optional
@@ -287,6 +309,16 @@ function performMasking<T>(key: string, value: unknown, options: Partial<IMaskDa
     ) as T;
 }
 
+
+/**
+ * Masks data based on the type and the provided masking options.
+ * This function is recursively called for nested objects.
+ *
+ * @template T
+ * @param {T} item - The original data to mask.
+ * @param {Partial<IMaskDataOptions>} [options={}] - Optional masking options.
+ * @returns {T} The masked data.
+ */
 export function maskData<T>(item: T, options: Partial<IMaskDataOptions> = {}): T {
     const { keyCheck = shouldMaskKey, immutable = true } = options;
 
@@ -321,6 +353,14 @@ export function maskData<T>(item: T, options: Partial<IMaskDataOptions> = {}): T
     return item as T;
 }
 
+/**
+ * Masks arguments of a function call, based on the provided masking options.
+ *
+ * @template T
+ * @param {unknown[]} args - The original arguments to mask.
+ * @param {IMaskDataOptions} [options] - Optional masking options.
+ * @returns {T[]} The masked arguments.
+ */
 export function maskArguments<T>(args: unknown[], options?: IMaskDataOptions): T[] {
     if (isNullish(args) || args.length === 0) return args as T[];
     return args.map(arg =>
