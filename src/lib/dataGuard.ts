@@ -1,16 +1,23 @@
 import { deepClone, isNullish, isObject, isString } from '../utils/helpers';
 
-type SensitiveContentKey = keyof typeof sensitiveContentRegExp;
+export type SensitiveContentKey = keyof typeof sensitiveContentRegExp;
 type MaskingChar = 'X' | 'x' | '$' | '/' | '.' | '*' | '#' | '+' | '@' | '-' | '_' | ' ';
 
 interface IMaskDataOptions {
-    keyCheck?: (key: string) => boolean;
-    immutable?: boolean;
-    customPatterns?: Record<string, RegExp>;
-    maskingChar?: MaskingChar;
-    maskLength?: number;
-    types?: SensitiveContentKey[];
-    customSensitiveContentRegExp?: Record<string, RegExp>;
+    keyCheck: (key: string) => boolean;
+    immutable: boolean;
+    customPatterns: Record<string, RegExp>;
+    maskingChar: MaskingChar;
+    maskLength: number;
+    types: SensitiveContentKey[];
+    customSensitiveContentRegExp: Record<string, RegExp>;
+    /**
+     * When enabled, masks the sensitive content with a fixed number of characters,
+     * irrespective of the original content's length. This prevents inferring the
+     * length of the original content from the masked output.
+     * Default is 'false', which means the mask will reflect the original content's length.
+     */
+    fixedMaskLength: boolean;
 }
 
 const defaultSensitiveKeyFragments: Set<string> = new Set([
@@ -43,16 +50,23 @@ const sensitiveContentRegExp = {
     email: /(?<=^|[\s'"-#+.><])[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
     password: /\b(?=\S*\d)(?=\S*[A-Za-z])[\w!@#$%^&*()_+=\-,.]{6,}\b/gm,
     passwordInUri: /(?<=:\/\/[^:]+:)[^@]+?(?=@)/,
-    //    passwordMention: /(?<=.*(password|passwd|pwd)[:\s*]?)[^\s:]+/gi,
     passwordMention: /(?<=.*(password|passwd|pwd)(?:\s*:\s*|\s+))\S+/gi,
-
-    //    passwordMentionWithColon: /(?<=.*(password|passwd|pwd):\s*)[^\s:]+/gi,
-    //    passwordMentionWithoutColon: /(?<=.*(password|passwd|pwd)\s+)[^\s:]+/gi,
-
     uuid: /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi
 } as const;
 
-function maskSensitiveValue(value: string, maskingChar: MaskingChar = '*', maskLength = value.length - 4): string {
+function maskSensitiveValue(value: string, options: Partial<IMaskDataOptions>): string {
+    const skipMaskingPattern = /##([^#]*)##/g; // Pattern to match content that should not be masked
+    const maskLength = options?.maskLength || value.length - 4;
+    const maskingChar = options?.maskingChar || '*';
+    // Skip masking if the entire value is wrapped in '##'
+    if (skipMaskingPattern.test(value)) {
+        return value;
+    }
+
+    if (options?.fixedMaskLength) {
+        return maskingChar.repeat(16);
+    }
+
     if (value.length <= 4 || maskLength >= value.length) {
         return maskingChar.repeat(value.length);
     }
@@ -78,19 +92,32 @@ function maskSensitiveContent(
     originalValue: string,
     defaultPatterns: typeof sensitiveContentRegExp,
     customPatterns: Record<string, RegExp> = {},
-    options?: IMaskDataOptions
+    options?: Partial<IMaskDataOptions>
 ): string {
     const allPatterns = { ...defaultPatterns, ...customPatterns };
+    const skipMaskingPattern = /##([^#]*)##/g; // Pattern to match content that should not be masked
 
     const applyPatternMasking = (currentValue: string, pattern: RegExp): string => {
-        if (pattern) {
-            currentValue = currentValue.replace(
-                pattern,
-                match => maskSensitiveValue(match, options?.maskingChar, options?.maskLength) as string
-            );
-            pattern.lastIndex = 0; // Reset regex state for global patterns
-        }
-        return currentValue;
+        let result = '';
+        let lastIndex = 0;
+
+        // Process parts of the string outside '##' blocks
+        currentValue.replace(skipMaskingPattern, (match, p1, offset) => {
+            // Apply masking to the content before the '##' block
+            const substring = currentValue.substring(lastIndex, offset);
+            result += substring.replace(pattern, match => maskSensitiveValue(match, options));
+            // Don't mask inside the '##' block
+            result += match;
+            lastIndex = offset + match.length;
+            return match; // Necessary for the replace function, though it's not used here
+        });
+
+        // Apply masking to the content after the last '##' block
+        const substring = currentValue.substring(lastIndex);
+        result += substring.replace(pattern, match => maskSensitiveValue(match, options));
+
+        pattern.lastIndex = 0; // Reset regex state for global patterns
+        return result;
     };
 
     return Object.values(allPatterns).reduce(
@@ -99,13 +126,51 @@ function maskSensitiveContent(
     );
 }
 
+function unmaskContent(value: string): { isUnmasked: boolean; content: string } {
+    const unmaskPattern = /##(.*?)##/g;
+    let isUnmasked = false;
+    const content = value.replace(unmaskPattern, (match, capture) => {
+        isUnmasked = true;
+        return capture;
+    });
+
+    return { isUnmasked, content };
+}
+
+// Overload signatures
+export function maskString(value: string): string;
+export function maskString(value: string, options: Partial<IMaskDataOptions>): string;
 export function maskString(
     value: string,
-    types: SensitiveContentKey[] = Object.keys(sensitiveContentRegExp) as SensitiveContentKey[],
+    types: SensitiveContentKey[], // This remains non-optional
+    customSensitiveContentRegExp?: Record<string, RegExp>,
+    options?: Partial<IMaskDataOptions>
+): string;
+
+// Function implementation
+export function maskString(
+    value: string,
+    typesOrOptions?: SensitiveContentKey[] | Partial<IMaskDataOptions>, // This should be optional
     customSensitiveContentRegExp: Record<string, RegExp> = {},
-    options?: IMaskDataOptions
+    options?: Partial<IMaskDataOptions>
 ): string {
     if (!value || value.length === 0) return value;
+
+    let types: SensitiveContentKey[] | undefined;
+    if (typesOrOptions && !Array.isArray(typesOrOptions)) {
+        // If typesOrOptions is not an array, it means it's the options parameter
+        options = typesOrOptions;
+    } else {
+        types = typesOrOptions as SensitiveContentKey[];
+    }
+
+    if (!value || value.length === 0) return value;
+
+    // Check if the content is marked to be unmasked
+    const { isUnmasked, content } = unmaskContent(value);
+    if (isUnmasked) {
+        return content; // return content without '##' and without masking
+    }
 
     if (!types) types = Object.keys(sensitiveContentRegExp) as SensitiveContentKey[];
     if (!customSensitiveContentRegExp) customSensitiveContentRegExp = {};
@@ -124,7 +189,7 @@ export function maskString(
     return maskSensitiveContent(value, applicablePatterns, customSensitiveContentRegExp, options);
 }
 
-function maskMap<K, V>(item: Map<K, V>, options: IMaskDataOptions): Map<K, V> {
+function maskMap<K, V>(item: Map<K, V>, options: Partial<IMaskDataOptions>): Map<K, V> {
     // Process Map items
     const processedMap = options.immutable ? new Map<K, V>() : item;
 
@@ -140,7 +205,7 @@ function maskMap<K, V>(item: Map<K, V>, options: IMaskDataOptions): Map<K, V> {
     return processedMap;
 }
 
-function maskSet<T>(item: Set<T>, options: IMaskDataOptions): Set<T> {
+function maskSet<T>(item: Set<T>, options: Partial<IMaskDataOptions>): Set<T> {
     const processedSet = options.immutable ? new Set<T>() : item;
 
     const toAdd: T[] = [];
@@ -178,13 +243,13 @@ function maskSet<T>(item: Set<T>, options: IMaskDataOptions): Set<T> {
     return processedSet;
 }
 
-function maskError(item: Error, options: IMaskDataOptions): Error {
+function maskError(item: Error, options: Partial<IMaskDataOptions>): Error {
     const maskedError = new Error(maskString(item.message, undefined, options.customPatterns, options));
     maskedError.stack = maskString(item.stack, undefined, options.customPatterns, options);
     return maskedError;
 }
 
-function maskObject<T>(item: T, options: IMaskDataOptions): T {
+function maskObject<T>(item: T, options: Partial<IMaskDataOptions>): T {
     // Clone the item if immutability is required
     const processedItem = options.immutable ? deepClone(item) : item;
 
@@ -201,21 +266,28 @@ function maskObject<T>(item: T, options: IMaskDataOptions): T {
     ) as T;
 }
 
-function maskArray<T>(item: T[], options: IMaskDataOptions): T[] {
+function maskArray<T>(item: T[], options: Partial<IMaskDataOptions>): T[] {
     return item.map(i => maskData(i, options));
 }
 
-function performMasking<T>(key: string, value: unknown, options: IMaskDataOptions): T {
+function performMasking<T>(key: string, value: unknown, options: Partial<IMaskDataOptions>): T {
+    // Check if the content is marked to be unmasked and it's a string
+    if (isString(value)) {
+        const { isUnmasked, content } = unmaskContent(value);
+        if (isUnmasked) {
+            return content as T; // return content without '##' and without masking
+        }
+    }
     return (
         options.keyCheck(key)
             ? isString(value)
-                ? maskSensitiveValue(value, options?.maskingChar, options?.maskLength) // Pass maskLength here
+                ? maskSensitiveValue(value, options) // Pass maskLength here
                 : maskData(value, options)
             : maskData(value, options)
     ) as T;
 }
 
-export function maskData<T>(item: T, options: IMaskDataOptions = {}): T {
+export function maskData<T>(item: T, options: Partial<IMaskDataOptions> = {}): T {
     const { keyCheck = shouldMaskKey, immutable = true } = options;
 
     if (isString(item)) {

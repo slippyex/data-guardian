@@ -15,7 +15,11 @@
 - 🔮 **Immutability (Optional)**: By default, it doesn't alter your original data structure unless configured to do so.
 - 🖌️ **Custom Masking**: Define your custom logic to pinpoint which keys in objects should be masked.
 - 📦 **Lightweight**: No dependencies, no bloat. `data-guardian` is a lightweight package that won't slow down your app.
-- ⚙️ **Configurable**: Set masking char to one of commonly used chars and length of chars to mask out
+- ⚙️ **Configurable**: Set the masking character to any commonly used character, and specify the length of the content to mask.
+- 🕵️ **Fixed length masking**: Ability to mask a fixed length of characters in a string. This removes hints of actual length of the sensitive data.
+- 📚 **Typescript Support**: `data-guardian` is written in TypeScript and comes with full type definitions.
+- 📜 **Explicit exclusion for masking**: Explicitly exclude potential sensitive content in strings by wrapping the content with '##'
+ 
 
 ## 🚀 Getting Started
 
@@ -160,6 +164,23 @@ const data = {
 
 console.log(maskData(data, customMaskingConfig));
 // Output: { id: 1, SensitiveInfo: 'Very##########Data' }
+```
+
+### Explicit exclusion for masking:
+`data-guardian` allows for explicit bypassing masking of potential sensitive content in strings by wrapping the content with '##'
+
+```javascript
+const exampleString = 'SpanWidth01 is invalid!';
+console.log(maskString(exampleString));
+// Output: "Sp*******01 is invalid!"
+
+const exampleNonMaskedString = '##SpanWidth01## is invalid!';
+console.log(maskString(exampleNonMaskedString));
+// Output: "SpanWidth01 is invalid!"
+
+console.log(maskData({ username: 'johndoe', password: '##SuperSecretPassword!##' }));
+// Output: { username: 'johndoe', password: 'SuperSecretPassword!' }
+
 ```
 
 ## ⚠️ Disclaimer

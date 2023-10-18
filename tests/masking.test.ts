@@ -1,4 +1,4 @@
-import { maskArguments, maskData, maskString } from '../src/';
+import { maskArguments, maskData, maskString, SensitiveContentKey } from '../src/';
 
 describe('Test all possible masking', () => {
     it('should be able to deal with nullish values', () => {
@@ -370,11 +370,32 @@ describe('Test all possible masking', () => {
         expect(maskString('here is my SecretPassword: test')).toBe('here is my SecretPassword: ****');
         expect(maskString('here is my passwd test')).toBe('here is my passwd ****');
         expect(maskString('here is my pwd test01!')).toBe('here is my pwd te***1!');
+        expect(maskString('here is my pwd test01!')).toBe('here is my pwd te***1!');
     });
 
     it('should capture any password in an uri-based string fragment', () => {
         expect(
             maskString('connection to postgres://dbuser:MySuperSecretPassword@myhost.com successfully established')
         ).toBe('connection to postgres://dbuser:My*****************rd@myhost.com successfully established');
+    });
+
+    it('should skip masking a marked content in a string', () => {
+        expect(maskString('simpleSpan01 is invalid!')).toBe('si********01 is invalid!');
+        expect(maskString('##simpleSpan01## is invalid!')).toBe('simpleSpan01 is invalid!');
+        expect(maskData({ username: 'johndoe', password: '##SuperSecretPassword!##' })).toEqual({
+            username: 'johndoe',
+            password: 'SuperSecretPassword!'
+        });
+    });
+
+    it('should return a fixed mask length content', () => {
+        expect(maskString('my shiny password: test01!')).toBe('my shiny password: te***1!');
+        expect(maskString('my shiny password: test01!', { fixedMaskLength: true })).toBe(
+            'my shiny password: ****************'
+        );
+        expect(maskData({ username: 'johndoe', password: 'testPass' }, { maskingChar: 'X', fixedMaskLength: true })).toEqual({
+            username: 'johndoe',
+            password: 'XXXXXXXXXXXXXXXX'
+        });
     });
 });
