@@ -183,6 +183,45 @@ console.log(maskData({ username: 'johndoe', password: '##SuperSecretPassword!##'
 
 ```
 
+## 📜 API Reference
+
+This section provides detailed information about the functions available in the Sensitive Content Masker library.
+
+### `maskString(value: string, options?: Partial<IMaskOptions>): string`
+
+Masks sensitive parts of a string based on the provided options.
+
+#### Parameters
+
+- `value` (string): The string containing potential sensitive content that needs to be masked.
+- `options` (Object, optional): A set of configurations for the masking process. This includes:
+    - `maskingChar` (string, default: '*'): The character used for masking sensitive content.
+    - `maskLength` (number, default: consistent with the length of sensitive content): The number of characters to show in the mask. If `fixedMaskLength` is set to true, `maskLength` will determine the exact number of masking characters, regardless of the original content length.
+    - `types` (Array<string>, optional): Predefined types of sensitive information to mask, such as 'creditCard', 'ssn', 'password', etc.
+    - `fixedMaskLength` (boolean, default: false): Determines if the mask should display a fixed number of characters.
+    - `customPatterns` (Object, optional): Custom regular expressions for identifying and masking additional types of sensitive content. The keys are custom names, and the values are the RegExp patterns.
+    - `immutable` (boolean, default: false): If true, the function returns a new string with masked content, keeping the original string unaltered.
+    - `keyCheck` (Function, not used here but applicable in `maskData`): A callback function used to check if an object's key should have its value masked.
+
+#### Return value
+
+- (string): The input string with sensitive content masked according to the specified options.
+
+### `maskData<T>(data: T, options?: Partial<IMaskOptions>): T`
+
+Recursively masks sensitive data in an object, array, or any other nested structure based on the provided options.
+
+#### Parameters
+
+- `data` (T): The data structure containing potential sensitive information. It could be an object, array, Map, Set, etc.
+- `options` (Object, optional): A set of configurations for the masking process, similar to the `maskString` function. Additionally, it uses the `keyCheck` function to decide if an object's key should have its value masked, based on the key name.
+
+#### Return value
+
+- (T): A new data structure with the same type as the input, containing masked sensitive content. If `immutable` is false, it alters the original data; otherwise, it returns a new instance.
+
+These functions are generic and designed to handle various types of data structures, ensuring sensitive information is adequately masked while retaining the original data format and type.
+
 ## ⚠️ Disclaimer
 
 `data-guardian` is designed to provide an additional layer of security by masking strings and object properties that contain sensitive information. However, it is not a substitute for comprehensive security practices. Ensure you follow industry standards and regulations for data protection and privacy.
