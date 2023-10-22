@@ -398,4 +398,18 @@ describe('Test all possible masking', () => {
             password: 'XXXXXXXXXXXXXXXX'
         });
     });
+
+    it('should not mask an object with circular references', () => {
+        const circularReference = {
+            self: null as unknown,
+            password: '12345'
+        };
+        circularReference.self = circularReference;
+
+        expect(maskData(circularReference)).toEqual({
+            self: circularReference,
+            password: '12345'
+        });
+    });
+
 });

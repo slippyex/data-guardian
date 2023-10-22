@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Guardian</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link href="./styles/site.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="banner">
+        <img src="./assets/data-guardian-banner-without.png" alt="Banner Image" class="background-banner">
+        <img src="./assets/data-guardian-logo-without-2.png" alt="Logo Image" class="overlay-logo">
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <section>
+                <h2>About Data Guardian</h2>
+                <p>Introducing <strong>Data Guardian</strong>, a robust utility crafted for developers prioritizing data
+                    security. Protect sensitive strings, objects, and ensure data immutability with zero dependencies.</p>
+            </section>
+
+            <section>
+                <h2>Key Features</h2>
+                <div class="features-list">
+                    <div class="feature">
+                        <img src="./assets/shield-icon-sm.png" alt="String Masking" class="feature-icon">
+                        <h3>String Masking</h3>
+                        <p>Conceal parts of strings, safeguarding sensitive data.</p>
+                    </div>
+                    <div class="feature">
+                        <img src="./assets/lock-icon-sm.png" alt="Object Masking" class="feature-icon">
+                        <h3>Object Masking</h3>
+                        <p>Automatically masks identified sensitive properties in objects.</p>
+                    </div>
+                    <div class="feature">
+                        <img src="./assets/gear-icon-sm.png" alt="Configurable" class="feature-icon">
+                        <h3>Configurable</h3>
+                        <p>Define your custom logic for pinpointed masking. Set masking characters, content length, and
+                            more.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>Get Started</h2>
+                <p>To integrate Data Guardian into your project, simply install it via npm:</p>
+                <pre><code>npm install data-guardian</code></pre>
+            </section>
+
+            <section>
+                <h2>🚀 Getting Started</h2>
+                <h3>Installation</h3>
+                <div class="code-box">
+                    <code>npm install data-guardian</code>
+                </div>
+
+                <h3>Usage</h3>
+                <div class="code-box">
+                    <code>
+                        const { maskData, maskString, maskArguments } = require('data-guardian');
+
+                        // Masking a string
+                        console.log(maskString('SensitiveData123!')); // Output: "Se************123!"
+
+                        // ... [other code snippets] ...
+                    </code>
+                </div>
+            </section>
+
+            <!-- ... [other sections like Defaults, Immutability, Customization, etc.] ... -->
+
+            <section>
+                <h2>⚠️ Disclaimer</h2>
+                <p>`data-guardian` is designed to provide an additional layer of security by masking strings and object
+                    properties that contain sensitive information. However, it is not a substitute for comprehensive
+                    security practices. Ensure you follow industry standards and regulations for data protection and
+                    privacy.</p>
+            </section>
+
+            <section>
+                <h2>🎈 Contributing</h2>
+                <p>If you have ideas on how to improve `data-guardian` or want to report a bug, please open an issue or
+                    submit a pull request. We appreciate your help and contributions!</p>
+            </section>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2023 Data Guardian. Crafted with 💖 for developers. All rights reserved.</p>
+    </footer>
+</body>
+<script>
+    document.addEventListener('scroll', function () {
+        if (window.scrollY > 10) {
+            document.body.classList.add('scrolled');
+        } else {
+            document.body.classList.remove('scrolled');
+        }
+    });
+</script>
+</html>

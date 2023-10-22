@@ -1,3 +1,35 @@
+export function hasCircularReference<T>(item: T): boolean {
+    const seenObjects = new WeakSet<object>();
+
+    function detect(obj: unknown): boolean {
+        if (typeof obj !== 'object' || obj === null) {
+            return false;
+        }
+
+        if (seenObjects.has(obj as object)) {
+            return true;
+        }
+
+        seenObjects.add(obj as object);
+
+        for (const key in obj as Record<PropertyKey, unknown>) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                if (detect((obj as Record<PropertyKey, unknown>)[key])) {
+                    return true;
+                }
+            }
+        }
+
+        // No need to delete the object from seenObjects since it's now a WeakSet
+
+        return false;
+    }
+
+    return detect(item);
+}
+
+
+
 export function deepClone<T>(obj: T, visited = new WeakMap()): T {
     if (obj === null || typeof obj !== 'object') {
         return obj;

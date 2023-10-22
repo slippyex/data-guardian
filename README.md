@@ -240,7 +240,7 @@ Masks sensitive parts of a string based on the provided options.
 
 ### `maskData<T>(data: T, options?: Partial<IMaskOptions>): T`
 
-Recursively masks sensitive data in an object, array, or any other nested structure based on the provided options.
+Recursively masks sensitive data in an object, array, or any other nested structure based on the provided options. Will not mask objects with circular references.
 
 #### Parameters
 
