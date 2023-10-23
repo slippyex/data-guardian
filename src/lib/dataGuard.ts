@@ -1,4 +1,4 @@
-import { deepClone, isNullish, isObject, isString } from '../utils/helpers';
+import { deepClone, hasCircularReference, isNullish, isObject, isString } from '../utils/helpers';
 
 export type SensitiveContentKey = keyof typeof sensitiveContentRegExp;
 type MaskingChar = 'X' | 'x' | '$' | '/' | '.' | '*' | '#' | '+' | '@' | '-' | '_' | ' ';
@@ -272,6 +272,9 @@ function maskError(item: Error, options: Partial<IMaskDataOptions>): Error {
 }
 
 function maskObject<T>(item: T, options: Partial<IMaskDataOptions>): T {
+    if (hasCircularReference(item)) {
+        return item;
+    }
     // Clone the item if immutability is required
     const processedItem = options.immutable ? deepClone(item) : item;
 
