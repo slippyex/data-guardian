@@ -65,7 +65,7 @@ a {
 }
 
 a:hover {
-    color: #f2e8df;
+    color: #333333;
 }
 
 .features-list {
@@ -114,4 +114,24 @@ footer {
 .code-box code {
     display: block;
     white-space: pre;
+}
+
+.core-concepts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.concept {
+    padding: 10px;
+    border: 1px solid #ddd; /* Optional border */
+    border-radius: 8px; /* Optional rounded corners */
+}
+
+.concept-card {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
 }
