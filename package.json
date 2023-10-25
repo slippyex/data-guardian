@@ -1,6 +1,6 @@
 {
   "name": "data-guardian",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Tiny, zero-dependencies, package which tries to mask sensitive data in arbitrary collections, errors, objects and strings.",
   "main": ".build/src/index.js",
   "files": [
@@ -19,6 +19,7 @@
   },
   "author": "Markus Velten",
   "repository": "https://github.com/slippyex/data-guardian.git",
+  "homepage": "https://data-guardian.io",
   "license": "MIT",
   "private": false,
   "keywords": [
