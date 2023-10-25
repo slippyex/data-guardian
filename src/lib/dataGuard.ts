@@ -18,6 +18,7 @@ interface IMaskDataOptions {
      * Default is 'false', which means the mask will reflect the original content's length.
      */
     fixedMaskLength: boolean;
+    excludeMatchers?: SensitiveContentKey[];
 }
 
 const defaultSensitiveKeyFragments: Set<string> = new Set([
@@ -196,6 +197,9 @@ export function maskString(
 
     if (!types) types = Object.keys(sensitiveContentRegExp) as SensitiveContentKey[];
     if (!customSensitiveContentRegExp) customSensitiveContentRegExp = {};
+    if (options?.excludeMatchers) {
+        types = types.filter(t => !options.excludeMatchers.includes(t))
+    }
 
     const applicablePatterns = types.reduce(
         (acc, type) => {

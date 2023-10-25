@@ -149,6 +149,12 @@ describe('Test all possible masking', () => {
         );
     });
 
+    it('should not mask an url', () => {
+        expect(maskString('my designated url is https://www.acme.com and you will find out', {excludeMatchers: ['url']})).toBe(
+            'my designated url is https://www.acme.com and you will find out'
+        );
+    });
+
     it('should mask a social security number', () => {
         expect(maskString('my social security number is 123-45-6789 and you will never find out')).toBe(
             'my social security number is 12*******89 and you will never find out'
