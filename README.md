@@ -37,7 +37,11 @@ Here's a quick peek at how `data-guardian` can be integrated into your JavaScrip
 const { maskData, maskString, maskArguments } = require('data-guardian');
 
 // Masking a string
-console.log(maskString('SensitiveData123!')); // Output: "Se************123!"
+console.log(maskString('SensitiveData123!')); 
+// Output: "Se************123!"
+
+console.log(maskString('connection to postgres://dbuser:SuperSecretPassword!@localhost:5432/mydb established'));
+// output: "connection to po****es://db**er:Su**************************st:5432/mydb established"
 
 // Masking an arbitary string with sensitive data
 console.log(maskString('a dude once exposed his super secret A1vbcvc.De#3435?r password to the world but luckily we could help')); 
@@ -166,6 +170,15 @@ console.log(maskData(data, customMaskingConfig));
 // Output: { id: 1, SensitiveInfo: 'Very##########Data' }
 ```
 
+### Exclusion of certain matchers:
+`data-guardian` allows for exclusion of certain matchers. This is useful when you want to mask all sensitive data except for a few. For example, you may want to mask all sensitive data except for the password in a URI.
+
+```javascript
+const exampleString = 'I do not want to mask my credit card number 1234-5678-9012-3456 but my password SuperSecretPassword should not be visible';
+console.log(maskString(exampleString, { excludeMatchers: ['creditCard'] }));
+// Output: "I do not want to mask my credit card number 1234-5678-9012-3456 but my password Su***************rd should not be visible"
+```
+
 ### Explicit exclusion for masking:
 `data-guardian` allows for explicit bypassing masking of potential sensitive content in strings by wrapping the content with '##'
 
@@ -194,13 +207,16 @@ An alias for the keys of the sensitiveContentRegExp object.
 
 ```typescript
 declare const sensitiveContentRegExp: {
+    readonly uuid: RegExp;
     readonly creditCard: RegExp;
     readonly ssn: RegExp;
     readonly url: RegExp;
     readonly ipv4: RegExp;
     readonly email: RegExp;
+    readonly passwordSubstring: RegExp;
     readonly password: RegExp;
-    readonly uuid: RegExp;
+    readonly passwordInUri: RegExp;
+    readonly passwordMention: RegExp;
 };
 ```
 
@@ -224,6 +240,7 @@ An interface representing the available options for masking.
     types (SensitiveContentKey[]): The types of sensitive content to check for.
     customSensitiveContentRegExp (object): An object similar to customPatterns, but used only in certain masking contexts.
     fixedMaskLength (boolean): When enabled, masks the sensitive content with a fixed number of characters. Default is 'false'.
+    excludeMatchers (SensitiveContentKey[]): The types of sensitive content to exclude from masking.
 
 ### `maskString(value: string, options?: Partial<IMaskOptions>): string`
 

@@ -1,4 +1,4 @@
-import { maskArguments, maskData, maskString, SensitiveContentKey } from '../src/';
+import { maskArguments, maskData, maskString } from '../src/';
 
 describe('Test all possible masking', () => {
     it('should be able to deal with nullish values', () => {
@@ -150,9 +150,9 @@ describe('Test all possible masking', () => {
     });
 
     it('should not mask an url', () => {
-        expect(maskString('my designated url is https://www.acme.com and you will find out', {excludeMatchers: ['url']})).toBe(
-            'my designated url is https://www.acme.com and you will find out'
-        );
+        expect(
+            maskString('my designated url is https://www.acme.com and you will find out', { excludeMatchers: ['url'] })
+        ).toBe('my designated url is https://www.acme.com and you will find out');
     });
 
     it('should mask a social security number', () => {
@@ -373,7 +373,8 @@ describe('Test all possible masking', () => {
 
     it('should mask any explicit password mentions', () => {
         expect(maskString('here is my password: test01!')).toBe('here is my password: te***1!');
-        expect(maskString('here is my SecretPassword: test')).toBe('here is my SecretPassword: ****');
+        expect(maskString('here is my secret password: test')).toBe('here is my secret password: ****');
+        expect(maskString('here is my secret password: password')).toBe('here is my secret password: pa****rd');
         expect(maskString('here is my passwd test')).toBe('here is my passwd ****');
         expect(maskString('here is my pwd test01!')).toBe('here is my pwd te***1!');
         expect(maskString('here is my pwd test01!')).toBe('here is my pwd te***1!');
@@ -399,7 +400,9 @@ describe('Test all possible masking', () => {
         expect(maskString('my shiny password: test01!', { fixedMaskLength: true })).toBe(
             'my shiny password: ****************'
         );
-        expect(maskData({ username: 'johndoe', password: 'testPass' }, { maskingChar: 'X', fixedMaskLength: true })).toEqual({
+        expect(
+            maskData({ username: 'johndoe', password: 'testPass' }, { maskingChar: 'X', fixedMaskLength: true })
+        ).toEqual({
             username: 'johndoe',
             password: 'XXXXXXXXXXXXXXXX'
         });
@@ -418,4 +421,14 @@ describe('Test all possible masking', () => {
         });
     });
 
+    it('should mask an obvious password in an arbitrary string', () => {
+        expect(maskString('My SuperSecretPassword should be masked')).toBe('My Su***************rd should be masked');
+        expect(maskString('You will never get that GeniusPasswordForEverything is my password')).toBe(
+            'You will never get that Ge***********************ng is my password'
+        );
+    });
+
+    it('sucks', () => {
+        console.log(maskString('connection to postgres://dbuser:SuperSecretPassword!@localhost:5432/mydb established'));
+    });
 });

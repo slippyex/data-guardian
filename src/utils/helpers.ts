@@ -28,8 +28,6 @@ export function hasCircularReference<T>(item: T): boolean {
     return detect(item);
 }
 
-
-
 export function deepClone<T>(obj: T, visited = new WeakMap()): T {
     if (obj === null || typeof obj !== 'object') {
         return obj;

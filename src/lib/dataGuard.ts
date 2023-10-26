@@ -44,15 +44,16 @@ const defaultSensitiveKeyFragments: Set<string> = new Set([
 ]);
 
 const sensitiveContentRegExp = {
+    uuid: /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi,
     creditCard: /\b(?:\d[ -]*?){13,16}\b/g,
     ssn: /\b[0-9]{3}-[0-9]{2}-[0-9]{4}\b/g,
     url: /\b(?:https?|ftp):\/\/[a-z0-9-+&@#/%?=~_|!:,.;]*[a-z0-9-+&@#/%=~_|]\b/gi,
     ipv4: /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g,
     email: /(?<=^|[\s'"-#+.><])[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
-    password: /\b(?=\S*\d)(?=\S*[A-Za-z])[\w!@#$%^&*()_+=\-,.]{6,}\b/gm,
+    passwordSubstring: /\b(?!password\b)\w*password\w*\b/gi,
+    password: /\b(?!\w*\/)(?=\S*\d)(?=\S*[A-Za-z])[\w!@#$%^&*()_+=\-,.]{6,32}\b/gm,
     passwordInUri: /(?<=:\/\/[^:]+:)[^@]+?(?=@)/,
-    passwordMention: /(?<=.*(password|passwd|pwd)(?:\s*:\s*|\s+))\S+/gi,
-    uuid: /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi
+    passwordMention: /(?<=.*(password|passwd|pwd)(?:\s*:\s*|\s+))\S+/gi
 } as const;
 
 function maskSensitiveValue(value: string, options: Partial<IMaskDataOptions>): string {
@@ -198,7 +199,7 @@ export function maskString(
     if (!types) types = Object.keys(sensitiveContentRegExp) as SensitiveContentKey[];
     if (!customSensitiveContentRegExp) customSensitiveContentRegExp = {};
     if (options?.excludeMatchers) {
-        types = types.filter(t => !options.excludeMatchers.includes(t))
+        types = types.filter(t => !options.excludeMatchers.includes(t));
     }
 
     const applicablePatterns = types.reduce(
@@ -315,7 +316,6 @@ function performMasking<T>(key: string, value: unknown, options: Partial<IMaskDa
             : maskData(value, options)
     ) as T;
 }
-
 
 /**
  * Masks data based on the type and the provided masking options.
