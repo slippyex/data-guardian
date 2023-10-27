@@ -2,15 +2,19 @@
   "name": "data-guardian",
   "version": "1.1.2",
   "description": "Tiny, zero-dependencies, package which tries to mask sensitive data in arbitrary collections, errors, objects and strings.",
-  "main": ".build/src/index.js",
+  "main": "dist/bundle.js",
+  "types": "dist/types/index.d.ts",
   "files": [
-    ".build/src"
+    "dist/bundle.js",
+    "dist/types"
   ],
+
   "engines": {
     "node": ">=12"
   },
   "scripts": {
     "build": "tsc",
+    "build:all": "yarn build && yarn webpack",
     "watch": "tsc -w",
     "lint": "eslint src -f table",
     "format": "prettier --write '{src,tests}/**/*.ts'",
@@ -61,8 +65,11 @@
     "pre-commit": "^1.2.2",
     "prettier": "^3.0.3",
     "ts-jest": "^28.0.5",
+    "ts-loader": "^9.5.0",
     "ts-node": "^10.8.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
   },
   "pre-commit": [
     "format",

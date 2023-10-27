@@ -2,6 +2,7 @@
   "compilerOptions": {
       "allowJs": false,
       "declaration": true,
+      "declarationDir": "./dist/types",
       "module": "commonjs",
       "esModuleInterop": true,
       "experimentalDecorators": true,
@@ -14,10 +15,11 @@
       "outDir": ".build",
       "baseUrl": ".",
       "paths": {
-          "*": ["node_modules/*", "src/@types/*"]
+          "*": ["node_modules/*"]
       },
       "lib": ["es2015", "es2017", "dom"],
       "downlevelIteration": true
   },
-  "include": ["src", "tests"]
+  "include": ["src/**/*.ts"],
+    "exclude": ["node_modules", "tests/**/*.ts"]
 }
