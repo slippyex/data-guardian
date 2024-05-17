@@ -56,8 +56,10 @@ const sensitiveContentRegExp = {
     passwordMention: /(?<=.*(password|passwd|pwd)(?:\s*:\s*|\s+))\S+/gi
 } as const;
 
+const SKIP_MASKING_PATTERN = /##([^#]*)##/g;
+
 function maskSensitiveValue(value: string, options: Partial<IMaskDataOptions>): string {
-    const skipMaskingPattern = /##([^#]*)##/g; // Pattern to match content that should not be masked
+    const skipMaskingPattern = SKIP_MASKING_PATTERN; // Pattern to match content that should not be masked
     const maskLength = options?.maskLength || value.length - 4;
     const maskingChar = options?.maskingChar || '*';
     // Skip masking if the entire value is wrapped in '##'
@@ -97,7 +99,7 @@ function maskSensitiveContent(
     options?: Partial<IMaskDataOptions>
 ): string {
     const allPatterns = { ...defaultPatterns, ...customPatterns };
-    const skipMaskingPattern = /##([^#]*)##/g; // Pattern to match content that should not be masked
+    const skipMaskingPattern = SKIP_MASKING_PATTERN; // Pattern to match content that should not be masked
 
     const applyPatternMasking = (currentValue: string, pattern: RegExp): string => {
         let result = '';
@@ -190,6 +192,21 @@ export function maskString(
 
     if (!value || value.length === 0) return value;
 
+    // try to mask a stringified object correctly
+    if (value.startsWith('{') && value.endsWith('}')) {
+        let parsed: unknown;
+        try {
+            // if the provided string is nothing else but a stringified object,
+            // parse it back to object, mask and stringify it again
+            // ref issue: https://github.com/slippyex/data-guardian/issues/8
+            parsed = JSON.parse(value);
+            const resulting = maskData(parsed);
+            return JSON.stringify(resulting);
+        } catch (err) {
+            // ignore error
+        }
+    }
+
     // Check if the content is marked to be unmasked
     const { isUnmasked, content } = unmaskContent(value);
     if (isUnmasked) {
@@ -199,7 +216,8 @@ export function maskString(
     if (!types) types = Object.keys(sensitiveContentRegExp) as SensitiveContentKey[];
     if (!customSensitiveContentRegExp) customSensitiveContentRegExp = {};
     if (options?.excludeMatchers) {
-        types = types.filter(t => !options.excludeMatchers.includes(t));
+        const excludeMatchersSet = new Set(options.excludeMatchers);
+        types = types.filter(t => !excludeMatchersSet.has(t));
     }
 
     const applicablePatterns = types.reduce(

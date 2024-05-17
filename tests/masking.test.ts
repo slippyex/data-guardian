@@ -431,4 +431,9 @@ describe('Test all possible masking', () => {
     it('sucks', () => {
         console.log(maskString('connection to postgres://dbuser:SuperSecretPassword!@localhost:5432/mydb established'));
     });
+
+    it('should mask a stringified object correctly', () => {
+        const data = '{"username":"myuser","password":"something"}';
+        expect(maskString(data)).toBe('{"username":"myuser","password":"so*****ng"}');
+    });
 });
