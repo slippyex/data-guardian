@@ -87,3 +87,7 @@ export function isString(value: unknown): value is string {
 export function isNullish(value: unknown) {
     return value === undefined || value === null;
 }
+
+export function isNumber(value: unknown): value is number {
+    return typeof value === 'number';
+}

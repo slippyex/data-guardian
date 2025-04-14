@@ -1,4 +1,4 @@
-import { deepClone, hasCircularReference, isNullish, isObject, isString } from '../utils/helpers';
+import { deepClone, hasCircularReference, isNullish, isNumber, isObject, isString } from '../utils/helpers';
 
 export type SensitiveContentKey = keyof typeof sensitiveContentRegExp;
 type MaskingChar = 'X' | 'x' | '$' | '/' | '.' | '*' | '#' | '+' | '@' | '-' | '_' | ' ';
@@ -19,6 +19,7 @@ interface IMaskDataOptions {
      */
     fixedMaskLength: boolean;
     excludeMatchers?: SensitiveContentKey[];
+    convertNumbersToStringWhenFieldMatch?: boolean;
 }
 
 const defaultSensitiveKeyFragments: Set<string> = new Set([
@@ -314,6 +315,10 @@ function maskObject<T>(item: T, options: Partial<IMaskDataOptions>): T {
     ) as T;
 }
 
+function maskNumber(item: number, options: Partial<IMaskDataOptions>): string {
+    return maskSensitiveValue(String(item), options);
+}
+
 function maskArray<T>(item: T[], options: Partial<IMaskDataOptions>): T[] {
     return item.map(i => maskData(i, options));
 }
@@ -326,13 +331,17 @@ function performMasking<T>(key: string, value: unknown, options: Partial<IMaskDa
             return content as T; // return content without '##' and without masking
         }
     }
-    return (
-        options.keyCheck(key)
-            ? isString(value)
-                ? maskSensitiveValue(value, options) // Pass maskLength here
-                : maskData(value, options)
-            : maskData(value, options)
-    ) as T;
+
+    if (options.keyCheck(key)) {
+        if (options.convertNumbersToStringWhenFieldMatch && isNumber(value)) {
+            return maskNumber(value, options) as T;
+        }
+        if (isString(value)) {
+            return maskSensitiveValue(value, options) as T; // Pass maskLength here
+        }
+    }
+
+    return maskData(value, options) as T;
 }
 
 /**
