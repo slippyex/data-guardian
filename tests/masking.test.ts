@@ -436,4 +436,17 @@ describe('Test all possible masking', () => {
         const data = '{"username":"myuser","password":"something"}';
         expect(maskString(data)).toBe('{"username":"myuser","password":"so*****ng"}');
     });
+
+    it('should mask number fields when convertNumbersToStringWhenFieldMatch is true', () => {
+        const data = {
+            phone: 5643545634,
+            mobile: 4242424242424242,
+            someFieldName: 111
+        };
+        expect(maskData(data, { convertNumbersToStringWhenFieldMatch: true })).toEqual({
+            phone: '56******34',
+            mobile: '42************42',
+            someFieldName: 111
+        });
+    });
 });
